@@ -1,0 +1,3 @@
+-- Hoshii database schema
+-- Full DDL implemented in Task 1.2
+-- WAL mode and foreign keys enabled in db/mod.rs
