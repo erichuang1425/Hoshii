@@ -1,0 +1,30 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for Hoshii",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:allow-open",
+    "dialog:allow-message",
+    "dialog:allow-confirm",
+    "fs:allow-read",
+    "fs:allow-write",
+    "fs:allow-exists",
+    "fs:allow-stat",
+    "fs:allow-readdir",
+    "fs:allow-rename",
+    "fs:allow-copy-file",
+    "fs:allow-remove",
+    "fs:allow-mkdir",
+    "shell:allow-execute",
+    "shell:allow-spawn",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "$APPLOCALDATA/**" },
+        { "path": "$HOME/**" },
+        { "path": "**" }
+      ]
+    }
+  ]
+}
