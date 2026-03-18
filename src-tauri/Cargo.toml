@@ -1,0 +1,33 @@
+[package]
+name = "hoshii"
+version = "0.1.0"
+description = "Desktop gallery application for mixed media on external drives"
+authors = ["Hoshii"]
+edition = "2021"
+
+[lib]
+name = "hoshii_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.31", features = ["bundled"] }
+walkdir = "2"
+image = "0.25"
+zip = "0.6"
+regex = "1"
+rayon = "1.8"
+natord = "1.0"
+log = "0.4"
+env_logger = "0.11"
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+notify = "6"
