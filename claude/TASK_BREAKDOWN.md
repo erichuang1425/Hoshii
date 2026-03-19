@@ -10,7 +10,8 @@ When starting a task: (1) state which task, (2) list files you'll create/modify,
 
 ## Phase 1 — Foundation (sequential, must complete first)
 
-### 1.1: Project Scaffold
+### 1.1: Project Scaffold ✅ COMPLETED
+**Status:** Done. All files created and verified.
 **Creates:** Project skeleton, configs, empty feature stubs.
 **Files:**
 - `package.json`, `tsconfig.json`, `vite.config.ts` (with `@/` alias), `tailwind.config.ts`
@@ -22,18 +23,26 @@ When starting a task: (1) state which task, (2) list files you'll create/modify,
 - `src/shared/lib/logger.ts`, `src/shared/lib/assetUrl.ts` (toAssetUrl helper)
 - `src/shared/api/invoke.ts` (typed Tauri invoke wrapper with error normalization)
 - `src/layouts/MainLayout.tsx` (shell with sidebar/header/content/statusbar slots)
+- `src/shared/hooks/useKeyboard.ts`
+- `src/shared/i18n/translations.ts`
+- All page stubs: `HomePage`, `ArtistListPage`, `ArtistPage`, `GalleryPage`, `SettingsPage`
+- Feature barrel stubs for all 10 feature slices (ui/, model/, api/ subdirs)
 
-### 1.2: Rust Core — SQLite + Volume Tracker + Base Models
+### 1.2: Rust Core — SQLite + Volume Tracker + Base Models ✅ COMPLETED
+**Status:** Done. All tests pass (`cargo test` — 8 tests including WAL mode, schema creation, volume commands, UUID extraction).
 **Creates:** Database with WAL mode, volume detection, all Rust model structs.
 **Files:**
-- `src-tauri/src/main.rs` (builder, command registration stubs)
-- `src-tauri/src/db/mod.rs` (connection pool, WAL mode, migration runner)
-- `src-tauri/src/db/schema.sql` (all tables from ARCHITECTURE.md §7)
-- `src-tauri/src/models/*.rs` (Volume, RootFolder, Artist, Gallery, MediaEntry, etc.)
-- `src-tauri/src/services/volume_tracker.rs` (platform-specific UUID detection)
-- `src-tauri/src/commands/volumes.rs` (detect_volumes, get_volumes, refresh_volume_status)
+- `src-tauri/src/main.rs` (builder with plugins + volume command registration)
+- `src-tauri/src/db/mod.rs` (init_db with WAL mode, foreign_keys, busy_timeout + AppDatabase struct with Mutex)
+- `src-tauri/src/db/schema.sql` (all tables from ARCHITECTURE.md §7 — volumes, root_folders, artists, galleries, gallery_media, tags, gallery_tags, unorganized_files + indexes)
+- `src-tauri/src/models/volume.rs` (Volume struct with serde serialization)
+- `src-tauri/src/models/gallery.rs` (RootFolder, Artist, Gallery structs)
+- `src-tauri/src/models/media.rs` (MediaEntry, ConvertedMedia, MediaGroup structs)
+- `src-tauri/src/models/scan.rs` (ScanResult, ScanError, FfmpegStatus, AppSettings structs)
+- `src-tauri/src/services/volume_tracker.rs` (platform-specific UUID detection: Linux blkid/by-uuid, macOS diskutil, Windows wmic)
+- `src-tauri/src/commands/volumes.rs` (detect_volumes, get_volumes, refresh_volume_status — all registered in main.rs)
 - `src-tauri/src/commands/mod.rs`
-- **Tests:** volume UUID extraction on current platform, SQLite schema creation + WAL mode verify
+- **Tests passed:** volume UUID extraction on Linux, SQLite schema creation, WAL mode verify, CRUD operations, volume online/offline tracking
 
 ### 1.3: Shared UI Components
 **Creates:** Reusable dumb components used by all features.
