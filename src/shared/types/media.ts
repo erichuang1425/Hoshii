@@ -1,3 +1,5 @@
+import type { GallerySortOrder } from './gallery';
+
 export type MediaType = 'image' | 'animated_image' | 'video' | 'avif_static' | 'avif_animated';
 
 export interface MediaEntry {
@@ -99,7 +101,7 @@ export interface AppSettings {
   thumbnailSize: 'small' | 'medium' | 'large';
   showMediaBadges: boolean;
   videoPlayerVolume: number;
-  gallerySortOrder: import('./gallery').GallerySortOrder;
+  gallerySortOrder: GallerySortOrder;
   thumbnailCacheMaxMb: number;
   autoExportMetadata: boolean;
 }
