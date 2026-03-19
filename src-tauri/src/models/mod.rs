@@ -1,2 +1,9 @@
-// Rust data structs (serde-serializable, matching TypeScript types).
-// Implemented in Task 1.2.
+pub mod gallery;
+pub mod media;
+pub mod scan;
+pub mod volume;
+
+pub use gallery::*;
+pub use media::*;
+pub use scan::*;
+pub use volume::*;
