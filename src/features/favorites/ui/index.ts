@@ -1,0 +1,1 @@
+// favorites/ui - React components
