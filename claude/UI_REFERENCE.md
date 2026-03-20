@@ -158,6 +158,110 @@ Legend:
 2. **Vertical Scroll** — continuous scroll, virtual list, items stacked vertically
 3. **Double Page** — two images side-by-side (for manga/doujin)
 4. **Thumbnail Grid** — overview of all pages in grid, click to jump
+5. **Long Strip (Webtoon)** — continuous vertical scroll, all pages in one column, fit-to-width default, seamless reading with no page breaks
+
+### Infinite Slider (Scrubbable Thumbnail Scrollbar)
+
+```
+Reader right edge (or bottom edge in horizontal layouts):
+
+  ▲
+  ║   ← slider track
+  ║
+  ║  ┌────────────────────┐
+  ●──│  Page 23 / 47      │  ← floating thumbnail preview (appears on hover/drag)
+  ║  │  [thumbnail image] │
+  ║  └────────────────────┘
+  ║
+  ▼
+```
+
+- Appears on right edge of reader in all modes
+- Handle position maps linearly to `currentPage / totalPages`
+- Hover over track → show floating thumbnail preview of target page
+- Drag handle → live preview updates, release to jump
+- Click anywhere on track → instant jump to that page
+- Auto-hides with reader chrome after 2s, reveals on mouse hover near right edge
+
+### Assistive Reading Tools
+
+**Reading Toolbar** (accessible via gear icon in reader header):
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Fit: [Width] [Height] [Original] [Best]             │
+│ Direction: [LTR →] [← RTL] [↓ Vertical]            │
+│ Auto-scroll: [Off ○──────● On]  Speed: [━━●━━━━━]  │
+└─────────────────────────────────────────────────────┘
+```
+
+- **Fit modes:** Toggle buttons — fit-to-width, fit-to-height, original size, fit-best (auto)
+- **Reading direction:**
+  - LTR (default): left click zone = prev, right = next; ← arrow = prev, → arrow = next
+  - RTL (manga): left click zone = next, right = prev; ← arrow = next, → arrow = prev; double page shows right page first
+  - Vertical: up = prev, down = next; click zones top/bottom instead of left/right
+- **Auto-scroll:** Toggle on/off, adjustable speed slider (10-200 px/s), pauses on mouse hover over content, resumes on mouse leave
+- Reading direction preference persisted per-gallery in Zustand store
+
+### Chronological Navigation
+
+For galleries linked by date (Smart Linking feature):
+
+```
+┌─────────────────────────────────────────────────────┐
+│ ← Mar 14  │  Gallery Title  │  3/47  │  Mar 16 →   │
+└─────────────────────────────────────────────────────┘
+```
+
+- "← Previous (date)" and "Next (date) →" buttons in reader header
+- Only visible for galleries that have chronological links (date detected in name)
+- Clicking navigates to the adjacent gallery in chronological order
+
+### Timeline View (Per-Image)
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Timeline                                    [Day▾]      │
+│                                                          │
+│  Mar 15       Mar 16            Mar 18       Mar 20      │
+│   ┃            ┃                  ┃           ┃          │
+│  ┌┸┐  ┌┸┐    ┌┸┐  ┌┸┐         ┌┸┐  ┌┸┐    ┌┸┐          │
+│  │ │  │ │    │ │  │ │         │ │  │ │    │ │           │
+│  └─┘  └─┘    └─┘  └─┘         └─┘  └─┘    └─┘          │
+│  ═══════════════●═══════════════════════════  scrubber   │
+└──────────────────────────────────────────────────────────┘
+```
+
+- Horizontal axis represents time, images plotted at parsed dates
+- Zoom control: Day / Week / Month granularity (dropdown top-right)
+- Draggable scrubber along bottom, snaps to nearest image cluster
+- Click any thumbnail → open in reader at that page
+- Date labels auto-space based on zoom level and image density
+- Keyboard shortcut: `T` toggles timeline view in reader
+
+### Smart Group UI
+
+On the Artist Page (gallery list), Smart Groups are indicated:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  📂 justin          Smart Group (3 galleries)  [▾]  │
+│  ┌──────┐  ┌──────┐  ┌──────┐                      │
+│  │cover1│  │cover2│  │cover3│                       │
+│  │      │  │      │  │      │                       │
+│  └──────┘  └──────┘  └──────┘                       │
+│  justin-1   justin_1   justin1                      │
+├─────────────────────────────────────────────────────┤
+│  📂 alice-vacation   Smart Group (2 galleries)      │
+│  ...                                                │
+└─────────────────────────────────────────────────────┘
+```
+
+- Smart Groups shown as collapsible sections on the artist page
+- Badge: "Smart Group (N galleries)" with link icon
+- Expand to see all member galleries side-by-side
+- Right-click gallery → "Unlink from Smart Group" option
+- Galleries not in any group display normally in the regular grid
 
 ---
 
@@ -234,6 +338,13 @@ Custom VideoPlayer component:
 | `F11` | App fullscreen | Global |
 | `/` or `Ctrl+F` | Focus search | Global |
 | `Ctrl+,` | Open settings | Global |
+| `W` | Toggle Long Strip (Webtoon) mode | Reader |
+| `T` | Toggle Timeline view | Reader |
+| `R` | Cycle reading direction (LTR → RTL → Vertical) | Reader |
+| `S` | Toggle auto-scroll | Reader |
+| `[` / `]` | Decrease / increase auto-scroll speed | Reader (auto-scroll active) |
+| `Shift+←` | Navigate to previous chronological gallery | Reader (chrono-linked) |
+| `Shift+→` | Navigate to next chronological gallery | Reader (chrono-linked) |
 
 ---
 

@@ -1,6 +1,13 @@
-// Command modules will be added here as features are implemented.
-// Each command file maps to a set of #[tauri::command] handlers.
-//
-// Example (added in Task 1.2):
-// pub mod volumes;
-// pub mod scan_roots;
+pub mod check_ffmpeg;
+pub mod chrono_groups;
+pub mod db_ops;
+pub mod favorites;
+pub mod incremental_scan;
+pub mod media_probe;
+pub mod scan_gallery;
+pub mod scan_roots;
+pub mod smart_groups;
+pub mod tags;
+pub mod thumbnails;
+pub mod video_remux;
+pub mod volumes;
