@@ -52,6 +52,13 @@ fn main() {
             commands::scan_gallery::get_artists,
             commands::scan_gallery::get_galleries,
             commands::incremental_scan::incremental_scan,
+            commands::thumbnails::generate_thumbnail,
+            commands::thumbnails::evict_thumbnail_cache,
+            commands::thumbnails::get_thumbnail_cache_size,
+            commands::media_probe::probe_media,
+            commands::video_remux::remux_video,
+            commands::video_remux::convert_animated_avif,
+            commands::check_ffmpeg::check_ffmpeg,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hoshii");
