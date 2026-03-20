@@ -63,6 +63,8 @@ fn main() {
             commands::smart_groups::get_smart_groups_for_root,
             commands::chrono_groups::get_chronological_groups,
             commands::chrono_groups::get_gallery_timeline,
+            commands::tags::get_all_tags,
+            commands::favorites::get_favorite_galleries,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hoshii");

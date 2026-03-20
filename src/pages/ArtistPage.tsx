@@ -4,6 +4,8 @@ import { Spinner, SearchInput } from '@/shared/ui';
 import { t } from '@/shared/i18n';
 import { GalleryCard } from '@/features/browse-artists/ui/GalleryCard';
 import { useBrowseArtistsStore } from '@/features/browse-artists/model/useBrowseArtistsStore';
+import { SmartGroupsPanel } from '@/features/smart-groups/ui/SmartGroupsPanel';
+import { useSettingsStore } from '@/features/settings/model/useSettingsStore';
 import type { GallerySortOrder } from '@/shared/types';
 
 export function ArtistPage() {
@@ -16,6 +18,7 @@ export function ArtistPage() {
   const fetchGalleries = useBrowseArtistsStore((s) => s.fetchGalleries);
   const setGallerySort = useBrowseArtistsStore((s) => s.setGallerySort);
 
+  const enableSmartGrouping = useSettingsStore((s) => s.settings.enableSmartGrouping);
   const numericArtistId = Number(artistId);
 
   useEffect(() => {
@@ -77,10 +80,17 @@ export function ArtistPage() {
       )}
 
       {!loading && galleries.length > 0 && (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-          {galleries.map((gallery) => (
-            <GalleryCard key={gallery.id} gallery={gallery} />
-          ))}
+        <div className="flex gap-4">
+          <div className="flex-1 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 content-start">
+            {galleries.map((gallery) => (
+              <GalleryCard key={gallery.id} gallery={gallery} />
+            ))}
+          </div>
+          {enableSmartGrouping && !isNaN(numericArtistId) && (
+            <div className="w-56 flex-shrink-0">
+              <SmartGroupsPanel artistId={numericArtistId} />
+            </div>
+          )}
         </div>
       )}
     </div>

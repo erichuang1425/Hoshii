@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { Spinner } from '@/shared/ui';
 import { useKeyboard } from '@/shared/hooks/useKeyboard';
 import { t } from '@/shared/i18n';
+import { toAssetUrl } from '@/shared/lib/assetUrl';
 import { useGalleryReaderStore } from '../model/useGalleryReaderStore';
 import { useChronoStore } from '@/features/chrono-linking';
 import { PageView } from './PageView';
@@ -169,7 +170,7 @@ export function GalleryReader({ galleryId, artistId }: GalleryReaderProps) {
                 )}
               >
                 <img
-                  src={`${entry.path}`}
+                  src={toAssetUrl(entry.path)}
                   alt={entry.filename}
                   className="aspect-[3/4] w-full object-cover"
                   loading="lazy"
