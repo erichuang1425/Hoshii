@@ -1,5 +1,13 @@
 # Project Setup Guide v2
 
+## Current Status
+
+**Project is bootstrapped and running.** Tasks 1.1 (Scaffold) and 1.2 (Rust Core) are complete.
+- `npm install` — all dependencies installed
+- `cargo test` — 8 Rust tests pass
+- `npm run test` — frontend tests pass (vitest)
+- Directory structure fully created with feature slice stubs
+
 ## Prerequisites
 
 1. **Node.js** ≥ 18
@@ -7,14 +15,29 @@
 3. **System WebView:**
    - Windows 10+: pre-installed (WebView2)
    - macOS: pre-installed (WebKit)
-   - Linux: `sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev`
+   - Linux: `sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf`
 4. **ffmpeg** (OPTIONAL — for video remux + video thumbnails):
    - Windows: `winget install ffmpeg`
    - macOS: `brew install ffmpeg`
    - Linux: `sudo apt install ffmpeg`
    - App works without it; video support is degraded gracefully
 
-## Bootstrap
+## Quick Start (project already bootstrapped)
+
+```bash
+# Clone and install
+git clone <repo-url> && cd hoshii
+npm install
+
+# Run tests
+cargo test --manifest-path src-tauri/Cargo.toml   # 8 Rust tests
+npm run test                                        # Frontend tests
+
+# Dev mode (requires system WebView libraries installed)
+npm run tauri dev
+```
+
+## Original Bootstrap (already done, for reference)
 
 ```bash
 # 1. Create Tauri v2 project
