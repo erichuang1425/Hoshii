@@ -190,6 +190,30 @@ const translations: Record<string, Record<string, string>> = {
     'zipRecovery.orphanedCount': '{n} orphaned zips',
     'zipRecovery.missingCount': '{n} missing zips',
 
+    // Reader toolbar (Task 5.1c)
+    'reader.mode': 'Mode',
+    'reader.fit': 'Fit',
+    'reader.direction': 'Direction',
+    'reader.autoScroll': 'Auto-scroll',
+    'reader.speed': 'Speed',
+    'reader.modeSingle': 'Single page',
+    'reader.modeDouble': 'Double page',
+    'reader.modeWebtoon': 'Webtoon',
+    'reader.modeGrid': 'Grid',
+    'reader.dirLTR': 'Left to Right',
+    'reader.dirRTL': 'Right to Left',
+    'reader.dirVertical': 'Vertical',
+    'reader.chronoNav': 'Chronological',
+
+    // Smart Groups (Task 5.2)
+    'smartGroups.title': 'Related',
+    'smartGroups.unnamed': '(unnamed)',
+
+    // Timeline (Task 5.4)
+    'timeline.label': 'Timeline',
+    'timeline.pages': 'pages',
+    'timeline.undated': 'Undated',
+
     // Shared
     'shared.offline': 'Offline',
     'shared.reconnectDrive': 'Reconnect {drive} to view',
@@ -397,6 +421,30 @@ const translations: Record<string, Record<string, string>> = {
     'zipRecovery.selectRoot': '選擇根資料夾',
     'zipRecovery.orphanedCount': '{n} 個孤立的 zip',
     'zipRecovery.missingCount': '{n} 個缺少的 zip',
+
+    // Reader toolbar (Task 5.1c)
+    'reader.mode': '模式',
+    'reader.fit': '縮放',
+    'reader.direction': '方向',
+    'reader.autoScroll': '自動捲動',
+    'reader.speed': '速度',
+    'reader.modeSingle': '單頁',
+    'reader.modeDouble': '雙頁',
+    'reader.modeWebtoon': '條漫',
+    'reader.modeGrid': '格',
+    'reader.dirLTR': '從左到右',
+    'reader.dirRTL': '從右到左',
+    'reader.dirVertical': '垂直',
+    'reader.chronoNav': '時序瀏覽',
+
+    // Smart Groups (Task 5.2)
+    'smartGroups.title': '相關',
+    'smartGroups.unnamed': '（未命名）',
+
+    // Timeline (Task 5.4)
+    'timeline.label': '時間軸',
+    'timeline.pages': '頁',
+    'timeline.undated': '無日期',
 
     // Shared
     'shared.offline': '離線',

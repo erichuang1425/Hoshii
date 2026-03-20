@@ -1,9 +1,11 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { GalleryReader } from '@/features/gallery-viewer/ui/GalleryReader';
 
 export function GalleryPage() {
   const { galleryId } = useParams<{ galleryId: string }>();
+  const [searchParams] = useSearchParams();
   const numericId = Number(galleryId);
+  const artistId = searchParams.get('artistId') ? Number(searchParams.get('artistId')) : undefined;
 
   if (isNaN(numericId)) {
     return (
@@ -15,7 +17,7 @@ export function GalleryPage() {
 
   return (
     <div className="h-screen w-screen">
-      <GalleryReader galleryId={numericId} />
+      <GalleryReader galleryId={numericId} artistId={artistId} />
     </div>
   );
 }
