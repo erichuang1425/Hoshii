@@ -53,17 +53,33 @@
   - `commands/incremental_scan.rs`: `incremental_scan` — mtime-based change detection, only re-processes changed galleries
   - `commands/db_ops.rs`: Batch DB operations — `upsert_artist`, `upsert_gallery`, `replace_gallery_media`, `replace_unorganized_files`, `soft_delete_missing_galleries`, `get_gallery_mtime_map`, `update_root_scan_info`
 - **All 7 new scan commands registered in `main.rs`**
-- **42 new tests** (50 total Rust tests passing):
+- **42 new tests** (79 Rust total after Tasks 2.2+2.3; 50 at time of this task):
   - Natural sort: 14 sort tests + group extraction for all patterns from NATURAL_SORT_TEXT.md
   - Media detector: 5 tests (extension classification, filename classification, remux detection, type checks, extension count)
   - Scanner: 11 tests (gallery scan, mixed media, zip detection, hidden files, groups, artist scan, root scan, incremental diff)
   - DB ops: 5 tests (upsert artist, upsert update, gallery + media round-trip, media groups, mtime map)
 
+### Task 2.2: Rust Thumbnail Generator ✅
+- **Services:**
+  - `services/thumbnail.rs`: Static image thumbnail generation via `image` crate with Lanczos3 filter. GIF first-frame extraction. Video thumbnail extraction via ffmpeg (with fallback to 0s for short videos). WebP output format for small file sizes. Mtime-based cache invalidation. LRU disk cache eviction with configurable max size (default 2GB). Deterministic cache paths via hash of source path + width.
+- **Commands:**
+  - `commands/thumbnails.rs`: `generate_thumbnail` (path + width → cached thumb path), `evict_thumbnail_cache` (LRU cleanup), `get_thumbnail_cache_size`
+- **Cache location:** `{app_local_data}/hoshii/thumbs/`
+- **13 new tests**: image thumbnail creation, cache hit/miss, cache invalidation via mtime, no-upscale for small images, GIF thumbnail, video thumbnail without ffmpeg, cache size calculations, LRU eviction (under/over limit), path determinism, different widths
+
+### Task 2.3: Rust Media Probe + Video Processing ✅
+- **Services:**
+  - `services/video_processor.rs`: ffmpeg/ffprobe binary detection (PATH search + common locations). `FfmpegStatus` reporting (available, version, path). Media probing for images (dimensions via `image` crate), animated images (GIF/APNG), and videos (via ffprobe JSON). Video remuxing MKV/AVI/MOV→MP4 (fast stream-copy with transcode fallback). Animated AVIF→WebP conversion via ffmpeg. Binary header inspection for WebP animation (VP8X chunk bit 1) and AVIF animation (ftyp `avis` brand detection in major + compatible brands).
+- **Commands:**
+  - `commands/media_probe.rs`: `probe_media` (path → width, height, durationMs, isAnimated, mediaType)
+  - `commands/video_remux.rs`: `remux_video` (path → remuxed MP4 path), `convert_animated_avif` (path → converted WebP path)
+  - `commands/check_ffmpeg.rs`: `check_ffmpeg` (→ FfmpegStatus)
+- **Cache locations:** `{app_local_data}/hoshii/remuxed/`, `{app_local_data}/hoshii/avif-converted/`
+- **16 new tests**: ffmpeg status check, image probe (PNG/JPG), GIF probe (animated detection), video probe without ffprobe, unsupported extension error, WebP animation detection (static/non-WebP), AVIF animation detection (fake/static ftyp/animated ftyp/compatible brand), remux without ffmpeg, AVIF convert without ffmpeg, hash determinism
+
 ## What's NOT Done Yet
 
 ### Phase 2 (remaining):
-- **Task 2.2: Rust Thumbnail Generator** — `thumbnail.rs`, LRU disk cache (depends on 1.2 ✅)
-- **Task 2.3: Rust Media Probe + Video** — `video_processor.rs`, ffmpeg detection (depends on 1.2 ✅)
 - **Task 2.4: Browse Roots UI** — RootFolderGrid, AddRootButton, OfflineDrivesSection (depends on 1.3 ✅)
 - **Task 2.5: Browse Artists UI** — ArtistGrid, ArtistCard (depends on 1.3 ✅)
 - **Task 2.6: Gallery Viewer UI** — GalleryReader, PageView, ImageView, ThumbnailStrip (depends on 1.3 ✅)
@@ -129,19 +145,26 @@ Current known items:
 
 ## Parallel Development Readiness
 
-Phase 1 complete. Task 2.1 (Rust Scanner) complete. The following Phase 2 tasks can be started **now**:
+Phase 1 complete. Tasks 2.1, 2.2, 2.3 complete. All Rust backend for Phase 2 is done.
 
 | Task | Dependencies Met? | Can Start Now? |
 |------|-------------------|----------------|
 | 2.1 (Rust Scanner) | 1.2 ✅ | ✅ DONE |
-| 2.2 (Rust Thumbnails) | 1.2 ✅ | Yes |
-| 2.3 (Rust Media Probe) | 1.2 ✅ | Yes |
+| 2.2 (Rust Thumbnails) | 1.2 ✅ | ✅ DONE |
+| 2.3 (Rust Media Probe) | 1.2 ✅ | ✅ DONE |
 | 2.4 (Browse Roots UI) | 1.1 ✅, 1.3 ✅ | Yes |
 | 2.5 (Browse Artists UI) | 1.1 ✅, 1.3 ✅ | Yes |
-| 2.6 (Gallery Viewer UI) | 1.1 ✅, 1.3 ✅ | Yes |
-| 2.7 (Video Player UI) | 1.1 ✅, 1.3 ✅ | Yes |
+| 2.6 (Gallery Viewer UI) | 1.1 ✅, 1.3 ✅, 2.2 ✅ | Yes |
+| 2.7 (Video Player UI) | 1.1 ✅, 1.3 ✅, 2.3 ✅ | Yes |
 
 **Recommended parallel groups for next session:**
 - **Group A:** Tasks 2.4 + 2.5 (Browse Roots UI + Browse Artists UI) — frontend features using shared components from 1.3
-- **Group B:** Tasks 2.2 + 2.3 (Rust Thumbnails + Rust Media Probe) — independent Rust services
-- **Group C:** Tasks 2.6 + 2.7 (Gallery Viewer UI + Video Player) — reader components
+- **Group B:** Tasks 2.6 + 2.7 (Gallery Viewer UI + Video Player) — reader components, now unblocked by 2.2/2.3
+
+### Insight: Container environment needs proxy config for apt
+**Task:** 2.2 + 2.3 — Rust Thumbnails + Media Probe
+**Category:** Environment
+**Discovery:** The Claude Code container routes traffic through an HTTP proxy (`21.0.0.75:15004`). `curl` and `cargo` pick this up from env vars, but `apt-get` does not. Without explicit apt proxy configuration, all `apt-get` commands hang indefinitely.
+**Impact:** Cannot install system dependencies (GTK dev libs, ffmpeg) without proxy workaround.
+**Resolution:** Created `/etc/apt/apt.conf.d/99proxy` with `Acquire::http::Proxy` and `Acquire::https::Proxy` pointing to the container proxy. Also disable third-party PPAs that may use HTTPS hosts the proxy doesn't handle well.
+**Files Affected:** `/etc/apt/apt.conf.d/99proxy` (not in repo — runtime environment fix)
