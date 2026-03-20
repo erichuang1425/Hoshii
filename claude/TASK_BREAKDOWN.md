@@ -44,7 +44,8 @@ When starting a task: (1) state which task, (2) list files you'll create/modify,
 - `src-tauri/src/commands/mod.rs`
 - **Tests passed:** volume UUID extraction on Linux, SQLite schema creation, WAL mode verify, CRUD operations, volume online/offline tracking
 
-### 1.3: Shared UI Components
+### 1.3: Shared UI Components ✅ COMPLETED
+**Status:** Done. 12 components, 2 hooks, 1 utility module, 49 tests passing.
 **Creates:** Reusable dumb components used by all features.
 **Files:**
 - `src/shared/ui/Button.tsx`, `Modal.tsx`, `Spinner.tsx`, `Badge.tsx`, `Skeleton.tsx`, `SearchInput.tsx`
