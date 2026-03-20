@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import type { Gallery } from '@/shared/types';
 import { Badge, ProgressBar } from '@/shared/ui';
 import { toAssetUrl } from '@/shared/lib/assetUrl';
 import { t } from '@/shared/i18n';
+import { useFavoritesStore } from '@/features/favorites/model/useFavoritesStore';
 
 interface GalleryCardProps {
   gallery: Gallery;
@@ -11,8 +13,16 @@ interface GalleryCardProps {
 
 export function GalleryCard({ gallery }: GalleryCardProps) {
   const navigate = useNavigate();
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const [localFavorited, setLocalFavorited] = useState(gallery.favorited);
   const progress = gallery.pageCount > 0 ? gallery.lastReadPage / gallery.pageCount : 0;
   const isUnread = !gallery.lastReadAt;
+
+  async function handleFavoriteClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    setLocalFavorited((prev) => !prev);
+    await toggleFavorite({ ...gallery, favorited: localFavorited });
+  }
 
   return (
     <div
@@ -64,17 +74,25 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
           <span className="absolute top-2 left-2 h-2 w-2 rounded-full bg-[var(--accent)]" />
         )}
 
-        {/* Favorite heart - shown on hover */}
+        {/* Favorite heart - shown on hover, always visible if favorited */}
         <button
-          onClick={(e) => e.stopPropagation()}
+          onClick={handleFavoriteClick}
           className={clsx(
-            'absolute top-2 right-2 opacity-0 group-hover:opacity-100',
-            'transition-opacity duration-[var(--duration-fast)]',
-            gallery.favorited ? 'text-[var(--accent)] opacity-100' : 'text-[var(--text-muted)]',
+            'absolute top-2 right-2',
+            'transition-all duration-[var(--duration-fast)]',
+            localFavorited
+              ? 'text-[var(--accent)] opacity-100'
+              : 'text-white opacity-0 group-hover:opacity-100',
           )}
-          aria-label={gallery.favorited ? t('browseArtists.unfavorite') : t('browseArtists.favorite')}
+          aria-label={localFavorited ? t('browseArtists.unfavorite') : t('browseArtists.favorite')}
         >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill={gallery.favorited ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2}>
+          <svg
+            className="h-5 w-5 drop-shadow"
+            viewBox="0 0 24 24"
+            fill={localFavorited ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            strokeWidth={2}
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
           </svg>
         </button>

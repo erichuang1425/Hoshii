@@ -1,1 +1,1 @@
-// zip-recovery/api - Tauri command wrappers
+export * from './zipApi';

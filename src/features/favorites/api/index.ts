@@ -1,1 +1,1 @@
-// favorites/api - Tauri command wrappers
+export * from './favoritesApi';

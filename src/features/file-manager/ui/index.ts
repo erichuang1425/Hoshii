@@ -1,1 +1,1 @@
-// file-manager/ui - React components
+export * from './FileManagerView';
