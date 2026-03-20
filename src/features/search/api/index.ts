@@ -1,1 +1,1 @@
-// search/api - Tauri command wrappers
+export * from './searchApi';

@@ -1,1 +1,1 @@
-// settings/api - Tauri command wrappers
+export * from './settingsApi';

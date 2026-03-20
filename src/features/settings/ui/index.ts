@@ -1,1 +1,1 @@
-// settings/ui - React components
+export * from './SettingsPanel';

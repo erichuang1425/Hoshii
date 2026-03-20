@@ -235,9 +235,189 @@ Current known items:
 **Resolution:** All store tests use `vi.mock()` for API modules and direct `getState()` access. Component tests use `vi.mock()` for child components to test routing logic in isolation.
 **Files Affected:** All `__tests__/` directories in feature modules
 
+### Task 3.1: Sidebar Navigation ✅
+- **`src/layouts/useLayoutStore.ts`** — Zustand store for sidebar open/collapsed state + section collapse state (per-section collapsible)
+- **`src/layouts/Sidebar.tsx`** — Full sidebar with:
+  - Drives section: volume list with DriveStatusDot per volume
+  - Roots section: root folders as nav items (greyed if drive offline), navigate to `/roots/:id/artists`
+  - Recent section: last 5 galleries via `get_recent_galleries`
+  - Tags section: all tags via `get_all_tags`, click navigates to `/search?tag=...`
+  - Fixed bottom: Favorites, File Manager, Settings nav links
+  - All sections collapsible with ChevronIcon
+  - Active route highlighting via `useLocation`
+- i18n: 11 new sidebar keys (en + zh-TW)
+
+### Task 3.2: Header Bar ✅
+- **`src/layouts/Header.tsx`** — Full header with:
+  - Hamburger toggle (calls `useLayoutStore.toggleSidebar`)
+  - App title "Hoshii" (links to home)
+  - Search input: Enter key navigates to `/search?q=...`, Escape clears + blurs
+  - Favorites shortcut icon (navigates to `/favorites`)
+  - Settings shortcut icon (navigates to `/settings`)
+
+### Task 3.3: Status Bar ✅
+- **`src/layouts/StatusBar.tsx`** — Status bar showing:
+  - Drive count + offline count (from `useBrowseRootsStore`)
+  - Root folder count
+  - Last scan timestamp (formatted as relative time: "just now", "5m ago", "2h ago", "3d ago")
+  - Scan-in-progress indicator (yellow "Scanning..." when any scan is active)
+- **`src/layouts/MainLayout.tsx`** — Updated to use Sidebar + Header + StatusBar with animated sidebar collapse transition
+
+### Task 4.1: Settings Page ✅
+- **`src/features/settings/api/settingsApi.ts`** — `getSettings()`, `updateSettings()`
+- **`src/features/settings/model/useSettingsStore.ts`** — Zustand store with optimistic updates + revert on error; calls `setLanguage()` on language change
+- **`src/features/settings/ui/SettingsPanel.tsx`** — Full settings panel with sections: Theme/Language, Reading (mode/direction/fit/autoplay/autoscroll), Thumbnails (size/badges/cache), Video (volume), Gallery (sort/metadata export), Advanced (smart grouping/chrono linking)
+- **`src/pages/SettingsPage.tsx`** — Updated to use SettingsPanel, fetches settings on mount
+- i18n: 40+ settings keys (en + zh-TW)
+
+### Task 4.2: Favorites System ✅
+- **`src/features/favorites/api/favoritesApi.ts`** — `toggleFavorite()`, `getFavoriteGalleries()` (uses `search_galleries` with empty query, filters by `favorited: true`)
+- **`src/features/favorites/model/useFavoritesStore.ts`** — Zustand store with optimistic toggle (immediate UI update, revert on error), per-gallery toggling deduplication
+- **`src/features/favorites/ui/FavoritesGrid.tsx`** — Gallery grid showing favorites; empty state with icon + hint
+- **`src/pages/FavoritesPage.tsx`** — Page with favorites count in title
+- **`src/features/browse-artists/ui/GalleryCard.tsx`** — Updated: heart button now calls `useFavoritesStore.toggleFavorite`, maintains `localFavorited` state for instant feedback
+- i18n: 5 favorites keys (en + zh-TW)
+
+### Task 4.3: Tag System ✅
+- **`src/features/tag-system/api/tagApi.ts`** — `getGalleryTags()`, `addTag()`, `removeTag()`, `searchByTags()`
+- **`src/features/tag-system/model/useTagStore.ts`** — Per-gallery tag cache, active filter state, optimistic removeTag with revert
+- **`src/features/tag-system/ui/TagModal.tsx`** — Modal for managing tags on a gallery: shows current tags with × buttons, input + Add button; loads tags when modal opens
+- **`src/features/tag-system/ui/TagFilter.tsx`** — Tag pill filter row for gallery pages; multi-select, clear button
+- i18n: 11 tags keys (en + zh-TW)
+
+### Task 4.4: Search ✅
+- **`src/features/search/api/searchApi.ts`** — `searchGalleries(query, rootId?)`
+- **`src/features/search/model/useSearchStore.ts`** — Debounced search (300ms), recent queries list (max 10, deduplicated), clear functions
+- **`src/features/search/ui/SearchResults.tsx`** — Gallery card grid with result count, loading/empty states
+- **`src/pages/SearchPage.tsx`** — Full search page with URL sync (`?q=...`), recent queries pill buttons with clear option
+- Header search input navigates to SearchPage on Enter
+- i18n: 7 search keys (en + zh-TW)
+
+### Task 4.5: File Manager ✅
+- **`src/features/file-manager/api/fileManagerApi.ts`** — `getUnorganizedFiles()`, `moveFilesToGallery()`, `createGalleryFolder()`
+- **`src/features/file-manager/model/useFileManagerStore.ts`** — Selection state (Set), bulk move, create+move in one step, removes moved files from list
+- **`src/features/file-manager/ui/FileManagerView.tsx`** — File grid with checkbox-style selection, toolbar (select all/deselect/move/create), Move modal (choose existing gallery), Create modal (new gallery name)
+- **`src/pages/FileManagerPage.tsx`** — Root → Artist selector cascade, shows unorganized files for selected artist
+- i18n: 12 file manager keys (en + zh-TW)
+
+### Task 4.6: Zip Recovery ✅
+- **`src/features/zip-recovery/api/zipApi.ts`** — `verifyZipIntegrity()`, `restoreFromZip()`
+- **`src/features/zip-recovery/model/useZipStore.ts`** — Results cache, verifying/restoring states, derived counts (orphaned/missing/mismatched)
+- **`src/features/zip-recovery/ui/ZipRecoveryView.tsx`** — Table view with status badges, summary counts, Verify button, per-row Restore button
+- **`src/pages/ZipRecoveryPage.tsx`** — Root → Artist selector, shows ZipRecoveryView for selected artist path
+- i18n: 15 zip recovery keys (en + zh-TW)
+
+### Routes Updated ✅
+Added to `src/app/routes.tsx`:
+- `/favorites` → FavoritesPage
+- `/search` → SearchPage
+- `/file-manager` → FileManagerPage
+- `/zip-recovery` → ZipRecoveryPage
+
+## Test Summary
+
+- **Rust tests:** 79 passing (unchanged)
+- **Frontend tests:** 114 passing (91 existing + 23 new)
+  - Settings store: 5 tests (fetchSettings, defaults on error, updateSetting, revert on error, batch update)
+  - Favorites store: 5 tests (fetchFavorites, error handling, toggle add, toggle remove, isFavorited)
+  - Search store: 7 tests (search, empty query, recent queries, deduplication, clearResults, clearRecent, error)
+  - Tag store: 6 tests (fetchGalleryTags, addTag, removeTag, getGalleryTags, filterByTags, clearTagFilter)
+- **Total: 193 tests passing** (79 Rust + 114 frontend)
+
+## i18n Coverage
+
+Phase 3-4 additions:
+- Sidebar: 11 keys
+- Header: 4 keys
+- Status Bar: 9 keys
+- Settings: 40+ keys
+- Favorites: 5 keys
+- Tags: 11 keys
+- Search: 7 keys
+- File Manager: 12 keys
+- Zip Recovery: 15 keys
+- Shared additions: 8 keys (cancel, save, close, confirm, delete, edit, create, select)
+
+## What's NOT Done Yet
+
+### Phase 5 — Advanced Gallery Modes & Smart Linking:
+- **Task 5.1a: Long Strip / Webtoon Mode** — Continuous vertical scroll reader with virtualized rendering (depends on 2.6)
+- **Task 5.1b: Infinite Slider** — Scrubbable scrollbar with floating thumbnail previews for fast navigation (depends on 2.6)
+- **Task 5.1c: Assistive Reading Tools** — Fit modes (width/height/original/best), reading direction (LTR/RTL/Vertical), auto-scroll with adjustable speed (depends on 2.6)
+- **Task 5.2: Smart Collection Linking** — Fuzzy matching engine (regex + Levenshtein distance) to auto-group similar gallery names into Smart Groups (depends on 2.1)
+- **Task 5.3: Chronological Smart Linking** — Date-parsing utility for folder names, prev/next gallery navigation by chronological order (depends on 2.1, 5.2)
+- **Task 5.4: Custom Timeline Navigation** — Parse dates from image filenames, render visual timeline axis for per-image chronological browsing (depends on 2.1, 5.3)
+
+## Known Technical Debt
+
+```bash
+# Run this to find all TODO(debt) items in the codebase:
+grep -rn "TODO(debt)" src/ src-tauri/src/ --include="*.ts" --include="*.tsx" --include="*.rs"
+```
+
+Current known items:
+- `db/mod.rs`: Uses `Mutex<Connection>` — should be connection pool for concurrent access (TODO(debt): [PERF])
+- `useDriveStatus.ts`: Polls every 5s instead of listening to Tauri events (TODO(debt): [UX])
+- `global.css` has theme tokens but light mode is not yet implemented
+- `src-tauri/gen/` is gitignored (auto-generated by Tauri build)
+- `ArtistCard.tsx`: Uses placeholder icon instead of first gallery cover thumbnail (needs gallery data in artist response)
+- `GalleryReader.tsx` thumbnail_grid mode uses raw `entry.path` instead of `toAssetUrl()` — needs fix when testing in Tauri
+- `Sidebar.tsx`: Tags loaded via `get_all_tags` command which doesn't exist in current Rust backend (silently ignored)
+- `FavoritesApi.ts`: Uses `search_galleries` with empty string to fetch all galleries then filters client-side — inefficient for large datasets; should add dedicated `get_favorite_galleries` Tauri command in Phase 5
+
+## Session Insights
+
+### Insight: Tauri v2 capabilities require explicit fs permission entries
+**Task:** 1.1 — Project Scaffold
+**Category:** Gotcha
+**Discovery:** Tauri v2 capabilities require individual `fs:allow-*` permission entries (read, write, stat, exists, readdir, rename, copy-file, remove, mkdir) — there is no single `fs:allow-all`.
+**Impact:** File operations fail silently if specific permission not listed.
+**Resolution:** Added all required `fs:allow-*` entries to `capabilities/default.json`.
+**Files Affected:** `src-tauri/capabilities/default.json`
+
+### Insight: Linux volume detection needs fallback chain
+**Task:** 1.2 — Rust Core
+**Category:** Compatibility
+**Discovery:** `blkid` requires root on some Linux distros. `/dev/disk/by-uuid/` symlinks provide a non-root fallback but only work for some filesystem types.
+**Impact:** Volume UUID detection fails for non-root users on restrictive Linux distros.
+**Resolution:** Implemented fallback chain: try `blkid` first, fall back to `/dev/disk/by-uuid/` symlink resolution.
+**Files Affected:** `src-tauri/src/services/volume_tracker.rs`
+
+### Insight: Natural sort uses FIRST digit sequence for correct suffix handling
+**Task:** 2.1 — Rust Scanner
+**Category:** Algorithm
+**Discovery:** The natural sort algorithm must extract the FIRST digit sequence from a filename stem (not the last). This correctly handles `pic2_final.jpg` (group "pic", number 2) while still sorting camera-style names correctly via lowercase filename tiebreaker. Using the last digit sequence would misgroup `pic2_v2.jpg` as group "pic2_v" instead of "pic".
+**Impact:** Sort correctness for filenames with suffixes after the primary number (e.g., `_draft`, `_final`, `_v2`).
+**Resolution:** `extract_sort_key` uses first-digit-sequence extraction. Parenthetical numbers `(N)` are handled specially before the general case.
+**Files Affected:** `src-tauri/src/services/natural_sort.rs`
+
+### Insight: jsdom needed as explicit dev dependency for Vitest
+**Task:** 1.3 — Shared UI Components
+**Category:** Gotcha
+**Discovery:** Vitest `environment: 'jsdom'` config in `vite.config.ts` requires `jsdom` as an explicit dev dependency — it is not bundled with Vitest.
+**Impact:** All frontend tests fail with `Cannot find package 'jsdom'` error.
+**Resolution:** Added `jsdom` to devDependencies: `npm install --save-dev jsdom`.
+**Files Affected:** `package.json`
+
+### Insight: Container environment needs proxy config for apt
+**Task:** 2.2 + 2.3 — Rust Thumbnails + Media Probe
+**Category:** Environment
+**Discovery:** The Claude Code container routes traffic through an HTTP proxy (`21.0.0.75:15004`). `curl` and `cargo` pick this up from env vars, but `apt-get` does not. Without explicit apt proxy configuration, all `apt-get` commands hang indefinitely.
+**Impact:** Cannot install system dependencies (GTK dev libs, ffmpeg) without proxy workaround.
+**Resolution:** Created `/etc/apt/apt.conf.d/99proxy` with `Acquire::http::Proxy` and `Acquire::https::Proxy` pointing to the container proxy. Also disable third-party PPAs that may use HTTPS hosts the proxy doesn't handle well.
+**Files Affected:** `/etc/apt/apt.conf.d/99proxy` (not in repo — runtime environment fix)
+
+### Insight: Zustand store tests work without React rendering
+**Task:** 2.4-2.7 — Phase 2 Frontend
+**Category:** Testing
+**Discovery:** Zustand stores can be tested purely via `getState()` and `setState()` without rendering React components. This avoids the complexity of mocking Tauri in component tests and provides fast, reliable unit tests for business logic.
+**Impact:** Faster test execution and simpler test setup for state management logic.
+**Resolution:** All store tests use `vi.mock()` for API modules and direct `getState()` access. Component tests use `vi.mock()` for child components to test routing logic in isolation.
+**Files Affected:** All `__tests__/` directories in feature modules
+
 ## Parallel Development Readiness
 
-Phase 2 complete. All tasks 1.1-2.7 done. 170 tests passing (79 Rust + 91 frontend).
+Phase 3 + Phase 4 complete. All tasks 1.1-2.7, 3.1-3.3, 4.1-4.6 done. 193 tests passing (79 Rust + 114 frontend).
 
 | Task | Status |
 |------|--------|
@@ -251,5 +431,14 @@ Phase 2 complete. All tasks 1.1-2.7 done. 170 tests passing (79 Rust + 91 fronte
 | 2.5 (Browse Artists UI) | ✅ DONE |
 | 2.6 (Gallery Viewer UI) | ✅ DONE |
 | 2.7 (Video Player) | ✅ DONE |
+| 3.1 (Sidebar Navigation) | ✅ DONE |
+| 3.2 (Header Bar) | ✅ DONE |
+| 3.3 (Status Bar) | ✅ DONE |
+| 4.1 (Settings Page) | ✅ DONE |
+| 4.2 (Favorites System) | ✅ DONE |
+| 4.3 (Tag System) | ✅ DONE |
+| 4.4 (Search) | ✅ DONE |
+| 4.5 (File Manager) | ✅ DONE |
+| 4.6 (Zip Recovery) | ✅ DONE |
 
-**Next session: Phase 3 (Layouts & Navigation) + Phase 4 (Polish & Features)**
+**Next session: Phase 5 (Advanced Gallery Modes & Smart Linking)**

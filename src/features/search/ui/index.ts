@@ -1,1 +1,1 @@
-// search/ui - React components
+export * from './SearchResults';

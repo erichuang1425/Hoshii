@@ -1,1 +1,2 @@
-// tag-system/ui - React components
+export * from './TagModal';
+export * from './TagFilter';

@@ -1,1 +1,1 @@
-// favorites/ui - React components
+export * from './FavoritesGrid';
