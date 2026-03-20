@@ -42,10 +42,26 @@
 - **New dev dependency:** `jsdom` (required for Vitest jsdom environment)
 - **49 tests passing** across 8 test files: Button (6), Badge (3), DriveStatusDot (2), MediaBadge (5), ProgressBar (4), Spinner (2), Toast (3), mediaUtils (24)
 
+### Task 2.1: Rust Scanner — Full + Incremental ✅
+- **Services:**
+  - `services/natural_sort.rs`: Case-insensitive natural sort using first-digit-sequence extraction. Handles bare numbers, prefixed names, zero-padded, camera naming (`IMG_YYYYMMDD_NNN`), download duplicates with parenthetical `(N)`, Unicode prefixes, hyphenated prefixes, mixed case, and suffix-after-number patterns. Group extraction for subheading navigation.
+  - `services/media_detector.rs`: Extension-based MediaType classification for all 18 supported extensions (7 image + 2 animated + 8 video + 1 avif). Helper functions: `is_media_file`, `classify_extension`, `classify_filename`, `needs_remux`, `is_animated_type`, `is_video_type`, `is_static_image_type`.
+  - `services/scanner.rs`: Full directory walk (root → artists → galleries → media) with natural sort ordering. Incremental scan via mtime-based change detection (new/modified/deleted files). Gallery metadata: cover path (first sorted), backup zip detection, total size, group names.
+- **Commands:**
+  - `commands/scan_roots.rs`: `scan_root_folder` — full root scan with DB persistence (upsert artists, galleries, media; soft-delete removed galleries; update scan metadata)
+  - `commands/scan_gallery.rs`: `scan_gallery` (single gallery rescan), `get_gallery_media`, `get_media_groups`, `get_artists`, `get_galleries`
+  - `commands/incremental_scan.rs`: `incremental_scan` — mtime-based change detection, only re-processes changed galleries
+  - `commands/db_ops.rs`: Batch DB operations — `upsert_artist`, `upsert_gallery`, `replace_gallery_media`, `replace_unorganized_files`, `soft_delete_missing_galleries`, `get_gallery_mtime_map`, `update_root_scan_info`
+- **All 7 new scan commands registered in `main.rs`**
+- **42 new tests** (50 total Rust tests passing):
+  - Natural sort: 14 sort tests + group extraction for all patterns from NATURAL_SORT_TEXT.md
+  - Media detector: 5 tests (extension classification, filename classification, remux detection, type checks, extension count)
+  - Scanner: 11 tests (gallery scan, mixed media, zip detection, hidden files, groups, artist scan, root scan, incremental diff)
+  - DB ops: 5 tests (upsert artist, upsert update, gallery + media round-trip, media groups, mtime map)
+
 ## What's NOT Done Yet
 
-### Phase 2 (all depend on 1.2 ✅ and/or 1.3 ✅):
-- **Task 2.1: Rust Scanner** — `scanner.rs`, `natural_sort.rs`, `media_detector.rs`, scan commands, incremental scan (depends on 1.2 ✅)
+### Phase 2 (remaining):
 - **Task 2.2: Rust Thumbnail Generator** — `thumbnail.rs`, LRU disk cache (depends on 1.2 ✅)
 - **Task 2.3: Rust Media Probe + Video** — `video_processor.rs`, ffmpeg detection (depends on 1.2 ✅)
 - **Task 2.4: Browse Roots UI** — RootFolderGrid, AddRootButton, OfflineDrivesSection (depends on 1.3 ✅)
@@ -95,6 +111,14 @@ Current known items:
 **Resolution:** Implemented fallback chain: try `blkid` first, fall back to `/dev/disk/by-uuid/` symlink resolution.
 **Files Affected:** `src-tauri/src/services/volume_tracker.rs`
 
+### Insight: Natural sort uses FIRST digit sequence for correct suffix handling
+**Task:** 2.1 — Rust Scanner
+**Category:** Algorithm
+**Discovery:** The natural sort algorithm must extract the FIRST digit sequence from a filename stem (not the last). This correctly handles `pic2_final.jpg` (group "pic", number 2) while still sorting camera-style names correctly via lowercase filename tiebreaker. Using the last digit sequence would misgroup `pic2_v2.jpg` as group "pic2_v" instead of "pic".
+**Impact:** Sort correctness for filenames with suffixes after the primary number (e.g., `_draft`, `_final`, `_v2`).
+**Resolution:** `extract_sort_key` uses first-digit-sequence extraction. Parenthetical numbers `(N)` are handled specially before the general case.
+**Files Affected:** `src-tauri/src/services/natural_sort.rs`
+
 ### Insight: jsdom needed as explicit dev dependency for Vitest
 **Task:** 1.3 — Shared UI Components
 **Category:** Gotcha
@@ -105,11 +129,11 @@ Current known items:
 
 ## Parallel Development Readiness
 
-All Phase 1 tasks are now complete. The following Phase 2 tasks can be started **now**:
+Phase 1 complete. Task 2.1 (Rust Scanner) complete. The following Phase 2 tasks can be started **now**:
 
 | Task | Dependencies Met? | Can Start Now? |
 |------|-------------------|----------------|
-| 2.1 (Rust Scanner) | 1.2 ✅ | Yes |
+| 2.1 (Rust Scanner) | 1.2 ✅ | ✅ DONE |
 | 2.2 (Rust Thumbnails) | 1.2 ✅ | Yes |
 | 2.3 (Rust Media Probe) | 1.2 ✅ | Yes |
 | 2.4 (Browse Roots UI) | 1.1 ✅, 1.3 ✅ | Yes |
@@ -118,6 +142,6 @@ All Phase 1 tasks are now complete. The following Phase 2 tasks can be started *
 | 2.7 (Video Player UI) | 1.1 ✅, 1.3 ✅ | Yes |
 
 **Recommended parallel groups for next session:**
-- **Group A:** Task 2.1 (Rust Scanner) — largest and most complex Rust task
-- **Group B:** Task 2.4 (Browse Roots UI) + 2.5 (Browse Artists UI) — can run in parallel with Rust work
-- **Group C:** Task 2.2 (Rust Thumbnails) + 2.3 (Rust Media Probe) — independent Rust tasks
+- **Group A:** Tasks 2.4 + 2.5 (Browse Roots UI + Browse Artists UI) — frontend features using shared components from 1.3
+- **Group B:** Tasks 2.2 + 2.3 (Rust Thumbnails + Rust Media Probe) — independent Rust services
+- **Group C:** Tasks 2.6 + 2.7 (Gallery Viewer UI + Video Player) — reader components
