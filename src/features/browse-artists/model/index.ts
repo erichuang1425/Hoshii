@@ -1,1 +1,2 @@
-// browse-artists/model - Zustand store and business logic
+export { useBrowseArtistsStore } from './useBrowseArtistsStore';
+export type { ArtistSortOrder } from './useBrowseArtistsStore';
