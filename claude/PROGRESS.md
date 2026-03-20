@@ -44,6 +44,14 @@
 
 ### Phase 3 & 4: All pending (layouts, search, file manager, zip recovery, favorites, tags, settings, i18n, polish)
 
+### Phase 5 — Advanced Gallery Modes & Smart Linking:
+- **Task 5.1a: Long Strip / Webtoon Mode** — Continuous vertical scroll reader with virtualized rendering (depends on 2.6)
+- **Task 5.1b: Infinite Slider** — Scrubbable scrollbar with floating thumbnail previews for fast navigation (depends on 2.6)
+- **Task 5.1c: Assistive Reading Tools** — Fit modes (width/height/original/best), reading direction (LTR/RTL/Vertical), auto-scroll with adjustable speed (depends on 2.6)
+- **Task 5.2: Smart Collection Linking** — Fuzzy matching engine (regex + Levenshtein distance) to auto-group similar gallery names into Smart Groups (depends on 2.1)
+- **Task 5.3: Chronological Smart Linking** — Date-parsing utility for folder names, prev/next gallery navigation by chronological order (depends on 2.1, 5.2)
+- **Task 5.4: Custom Timeline Navigation** — Parse dates from image filenames, render visual timeline axis for per-image chronological browsing (depends on 2.1, 5.3)
+
 ## Known Technical Debt
 
 ```bash

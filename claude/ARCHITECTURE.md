@@ -515,6 +515,11 @@ Optionally write a `.hoshii-meta.json` in each root folder:
 | 11 | Favorites + Tags + Progress | `features/favorites/`, `features/tag-system/`, `features/reading-progress/` | #8, #9, #10 |
 | 12 | Settings + Metadata Export | `features/settings/`, `commands/metadata_export.rs` | Any |
 | 13 | Layouts (Sidebar, Header, StatusBar) | `layouts/` | Any Phase 2+ |
+| 14 | Long Strip / Webtoon Reader | `features/gallery-viewer/ui/LongStrip*` | #15, #16 |
+| 15 | Infinite Slider + Reading Tools | `features/gallery-viewer/ui/InfiniteSlider*`, `ReadingToolbar*`, `AutoScroll*` | #14, #16 |
+| 16 | Smart Collection Linking (Fuzzy) | `services/smart_grouping.rs`, `commands/smart_groups.rs`, `models/smart_group.rs` | #14, #15 |
+| 17 | Chronological Smart Linking | `services/date_parser.rs`, `features/gallery-viewer/ui/ChronologicalNav*` | #16 |
+| 18 | Custom Timeline Navigation | `commands/timeline.rs`, `features/gallery-viewer/ui/Timeline*` | #17 |
 
 ---
 
@@ -535,3 +540,139 @@ Optionally write a `.hoshii-meta.json` in each root folder:
 - **Rust backend:** main.rs with Tauri builder, 3 volume commands registered, db/mod.rs with WAL init, full schema.sql, all model structs (Volume, RootFolder, Artist, Gallery, MediaEntry, etc.), volume_tracker service with platform-specific UUID detection
 - **Frontend:** React app scaffolded with routes, all feature slice stubs (10 features × 3 subdirs), shared types matching TYPES_REFERENCE.md, logger, assetUrl helper, invoke wrapper, i18n skeleton, MainLayout shell, page stubs
 - **Tests:** 8 Rust tests passing (schema creation, WAL mode, volume tracking, UUID extraction)
+
+---
+
+## 13. Advanced Gallery Modes & Smart Linking Architecture
+
+### Reading Modes (Extended)
+
+The existing four reading modes (`single`, `vertical_scroll`, `double_page`, `thumbnail_grid`) are extended with:
+
+| Mode | Description | Key Behavior |
+|------|-------------|-------------|
+| `long_strip` | Continuous vertical scroll (Webtoon-style) | All pages in one virtualized column, fit-to-width, auto-progress tracking |
+
+**Reading Direction** applies to `single` and `double_page` modes:
+- `ltr` — Left-to-right (Western comics). Left click/arrow = previous, right = next.
+- `rtl` — Right-to-left (manga). Left click/arrow = next, right = previous. Double page renders right page first.
+- `vertical` — Top-to-bottom. Up arrow = previous, down = next.
+
+**Fit Modes** control image scaling within the viewport:
+- `fit_width` — Scale to viewport width (default for long_strip)
+- `fit_height` — Scale to viewport height (default for single page)
+- `original` — No scaling, pan to navigate
+- `fit_best` — Fit whichever dimension is constraining
+
+### Infinite Slider
+
+A scrubbable scrollbar overlay that works across all reading modes:
+
+```
+┌──────────────────────────────────────────────┐
+│                READER CONTENT                │
+│                                              │
+│  ┌────────────────────┐                      │
+│  │  Thumbnail Preview │  ← floating popup    │
+│  │  (page 23/47)      │    on hover/drag     │
+│  └────────────────────┘                      │
+│  ▲                                           │
+│  ║  ← slider track (right edge or bottom)    │
+│  ●  ← draggable handle                      │
+│  ║                                           │
+│  ▼                                           │
+└──────────────────────────────────────────────┘
+```
+
+- Position: right edge (vertical layout) or bottom edge (horizontal layout)
+- Handle position = `currentPage / totalPages`
+- Drag → floating thumbnail preview appears showing target page
+- Release → jump to page
+- Click track → jump directly
+
+### Smart Collection Linking (Fuzzy Matching)
+
+**Grouping Pipeline:**
+```
+1. Input: all gallery names for an artist
+   ["justin-1", "justin_1", "justin1", "alice-vacation", "alice_vacation_2"]
+
+2. Normalize: strip separators, lowercase
+   ["justin1", "justin1", "justin1", "alicevacation", "alicevacation2"]
+
+3. Extract base name + sequence number (regex)
+   [("justin", 1), ("justin", 1), ("justin", 1), ("alicevacation", None), ("alicevacation", 2)]
+
+4. Group by exact base name match
+   Group A: justin → [justin-1, justin_1, justin1]
+   Group B: alicevacation → [alice-vacation, alice_vacation_2]
+
+5. Fuzzy merge: for ungrouped items, compute Levenshtein distance
+   against existing group canonical names (threshold ≤ 2)
+
+6. Output: SmartGroup[] with canonical name + member galleries
+```
+
+**Database Tables:**
+```sql
+CREATE TABLE smart_groups (
+    id              INTEGER PRIMARY KEY,
+    artist_id       INTEGER REFERENCES artists(id) ON DELETE CASCADE,
+    canonical_name  TEXT NOT NULL,          -- display name for the group
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE smart_group_members (
+    smart_group_id  INTEGER REFERENCES smart_groups(id) ON DELETE CASCADE,
+    gallery_id      INTEGER REFERENCES galleries(id) ON DELETE CASCADE,
+    confidence      REAL DEFAULT 1.0,      -- 1.0 = exact match, <1.0 = fuzzy
+    PRIMARY KEY (smart_group_id, gallery_id)
+);
+
+CREATE INDEX idx_smart_groups_artist ON smart_groups(artist_id);
+CREATE INDEX idx_smart_group_members_gallery ON smart_group_members(gallery_id);
+```
+
+### Chronological Smart Linking
+
+For galleries whose names contain dates, build a navigation chain:
+
+```
+Artist: "photographer_x"
+├── shoot-20240101  →  Jan 1, 2024  ← prev: none,        next: shoot-20240215
+├── shoot-20240215  →  Feb 15, 2024 ← prev: shoot-20240101, next: march-2024-photos
+├── march-2024-photos → Mar 1, 2024 ← prev: shoot-20240215, next: none
+└── random-gallery  →  no date      ← excluded from chain
+```
+
+**Navigation UI:** "← Previous (Jan 1)" and "Next (Mar 1) →" buttons in reader header, visible only for date-linked galleries.
+
+### Custom Timeline Navigation (Per-Image)
+
+For galleries containing date-stamped filenames (e.g., camera photos), provide a visual timeline:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  Timeline View                                           │
+│                                                          │
+│  Mar 15    Mar 16         Mar 18    Mar 20               │
+│   ┃         ┃               ┃        ┃                   │
+│  ┌┸┐  ┌┸┐  ┌┸┐  ┌┸┐      ┌┸┐  ┌┸┐ ┌┸┐                  │
+│  │1│  │2│  │3│  │4│      │5│  │6│ │7│  ← image thumbs    │
+│  └─┘  └─┘  └─┘  └─┘      └─┘  └─┘ └─┘                  │
+│  ════════════●════════════════════════  ← scrubber        │
+│           (drag to navigate)                              │
+└──────────────────────────────────────────────────────────┘
+```
+
+- Horizontal axis = time, with date labels at natural breaks
+- Images plotted at their parsed date positions
+- Zoom levels: day view, week view, month view
+- Draggable scrubber snaps to image clusters
+- Click image thumbnail → open in reader at that page
+
+### Phase 5 (planned)
+8. **Task 5.1: Advanced Gallery Viewing Modes** — Long Strip (Webtoon) continuous scroll, Infinite Slider with thumbnail scrubber, assistive reading tools (fit modes, reading direction LTR/RTL/Vertical, auto-scroll)
+9. **Task 5.2: Smart Collection Linking** — Fuzzy matching engine (regex + Levenshtein distance) to auto-group similar gallery names (e.g., `justin-1`, `justin_1`, `justin1` → one Smart Group)
+10. **Task 5.3: Chronological Smart Linking** — Date-parsing utility for folder/gallery names, prev/next chronological navigation
+11. **Task 5.4: Custom Timeline Navigation** — Parse dates from image filenames, render visual timeline axis for per-image chronological browsing
