@@ -45,6 +45,13 @@ fn main() {
             commands::volumes::detect_volumes,
             commands::volumes::get_volumes,
             commands::volumes::refresh_volume_status,
+            commands::scan_roots::scan_root_folder,
+            commands::scan_gallery::scan_gallery,
+            commands::scan_gallery::get_gallery_media,
+            commands::scan_gallery::get_media_groups,
+            commands::scan_gallery::get_artists,
+            commands::scan_gallery::get_galleries,
+            commands::incremental_scan::incremental_scan,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hoshii");
