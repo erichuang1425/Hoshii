@@ -30,11 +30,15 @@ describe('useGalleryReaderStore', () => {
       currentPage: 0,
       totalPages: 0,
       readingMode: 'single',
+      fitMode: 'fit_best',
+      readingDirection: 'ltr',
       zoomLevel: 1,
       currentGroup: null,
       loading: false,
       error: null,
       headerVisible: true,
+      autoScroll: false,
+      autoScrollSpeed: 50,
     });
   });
 
@@ -115,5 +119,40 @@ describe('useGalleryReaderStore', () => {
 
     useGalleryReaderStore.getState().setZoomLevel(0.1);
     expect(useGalleryReaderStore.getState().zoomLevel).toBe(0.5);
+  });
+
+  it('setFitMode updates fit mode', () => {
+    useGalleryReaderStore.getState().setFitMode('fit_width');
+    expect(useGalleryReaderStore.getState().fitMode).toBe('fit_width');
+
+    useGalleryReaderStore.getState().setFitMode('original');
+    expect(useGalleryReaderStore.getState().fitMode).toBe('original');
+  });
+
+  it('setReadingDirection updates direction', () => {
+    useGalleryReaderStore.getState().setReadingDirection('rtl');
+    expect(useGalleryReaderStore.getState().readingDirection).toBe('rtl');
+
+    useGalleryReaderStore.getState().setReadingDirection('vertical');
+    expect(useGalleryReaderStore.getState().readingDirection).toBe('vertical');
+  });
+
+  it('setAutoScroll toggles auto scroll', () => {
+    useGalleryReaderStore.getState().setAutoScroll(true);
+    expect(useGalleryReaderStore.getState().autoScroll).toBe(true);
+
+    useGalleryReaderStore.getState().setAutoScroll(false);
+    expect(useGalleryReaderStore.getState().autoScroll).toBe(false);
+  });
+
+  it('setAutoScrollSpeed clamps speed to valid range', () => {
+    useGalleryReaderStore.getState().setAutoScrollSpeed(250);
+    expect(useGalleryReaderStore.getState().autoScrollSpeed).toBe(200);
+
+    useGalleryReaderStore.getState().setAutoScrollSpeed(0);
+    expect(useGalleryReaderStore.getState().autoScrollSpeed).toBe(1);
+
+    useGalleryReaderStore.getState().setAutoScrollSpeed(100);
+    expect(useGalleryReaderStore.getState().autoScrollSpeed).toBe(100);
   });
 });

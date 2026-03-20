@@ -59,6 +59,10 @@ fn main() {
             commands::video_remux::remux_video,
             commands::video_remux::convert_animated_avif,
             commands::check_ffmpeg::check_ffmpeg,
+            commands::smart_groups::get_smart_groups,
+            commands::smart_groups::get_smart_groups_for_root,
+            commands::chrono_groups::get_chronological_groups,
+            commands::chrono_groups::get_gallery_timeline,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hoshii");
