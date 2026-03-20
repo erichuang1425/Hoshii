@@ -1,1 +1,13 @@
-// Shared UI components - populated in Task 1.3
+export { Button } from './Button';
+export { Modal } from './Modal';
+export { Spinner } from './Spinner';
+export { Badge } from './Badge';
+export { Skeleton } from './Skeleton';
+export { SearchInput } from './SearchInput';
+export { Toast } from './Toast';
+export type { ToastData, ToastType } from './Toast';
+export { ToastProvider, useToast } from './ToastProvider';
+export { OfflineOverlay } from './OfflineOverlay';
+export { DriveStatusDot } from './DriveStatusDot';
+export { MediaBadge } from './MediaBadge';
+export { ProgressBar } from './ProgressBar';
