@@ -10,7 +10,8 @@ When starting a task: (1) state which task, (2) list files you'll create/modify,
 
 ## Phase 1 — Foundation (sequential, must complete first)
 
-### 1.1: Project Scaffold
+### 1.1: Project Scaffold ✅ COMPLETED
+**Status:** Done. All files created and verified.
 **Creates:** Project skeleton, configs, empty feature stubs.
 **Files:**
 - `package.json`, `tsconfig.json`, `vite.config.ts` (with `@/` alias), `tailwind.config.ts`
@@ -22,20 +23,29 @@ When starting a task: (1) state which task, (2) list files you'll create/modify,
 - `src/shared/lib/logger.ts`, `src/shared/lib/assetUrl.ts` (toAssetUrl helper)
 - `src/shared/api/invoke.ts` (typed Tauri invoke wrapper with error normalization)
 - `src/layouts/MainLayout.tsx` (shell with sidebar/header/content/statusbar slots)
+- `src/shared/hooks/useKeyboard.ts`
+- `src/shared/i18n/translations.ts`
+- All page stubs: `HomePage`, `ArtistListPage`, `ArtistPage`, `GalleryPage`, `SettingsPage`
+- Feature barrel stubs for all 10 feature slices (ui/, model/, api/ subdirs)
 
-### 1.2: Rust Core — SQLite + Volume Tracker + Base Models
+### 1.2: Rust Core — SQLite + Volume Tracker + Base Models ✅ COMPLETED
+**Status:** Done. All tests pass (`cargo test` — 8 tests including WAL mode, schema creation, volume commands, UUID extraction).
 **Creates:** Database with WAL mode, volume detection, all Rust model structs.
 **Files:**
-- `src-tauri/src/main.rs` (builder, command registration stubs)
-- `src-tauri/src/db/mod.rs` (connection pool, WAL mode, migration runner)
-- `src-tauri/src/db/schema.sql` (all tables from ARCHITECTURE.md §7)
-- `src-tauri/src/models/*.rs` (Volume, RootFolder, Artist, Gallery, MediaEntry, etc.)
-- `src-tauri/src/services/volume_tracker.rs` (platform-specific UUID detection)
-- `src-tauri/src/commands/volumes.rs` (detect_volumes, get_volumes, refresh_volume_status)
+- `src-tauri/src/main.rs` (builder with plugins + volume command registration)
+- `src-tauri/src/db/mod.rs` (init_db with WAL mode, foreign_keys, busy_timeout + AppDatabase struct with Mutex)
+- `src-tauri/src/db/schema.sql` (all tables from ARCHITECTURE.md §7 — volumes, root_folders, artists, galleries, gallery_media, tags, gallery_tags, unorganized_files + indexes)
+- `src-tauri/src/models/volume.rs` (Volume struct with serde serialization)
+- `src-tauri/src/models/gallery.rs` (RootFolder, Artist, Gallery structs)
+- `src-tauri/src/models/media.rs` (MediaEntry, ConvertedMedia, MediaGroup structs)
+- `src-tauri/src/models/scan.rs` (ScanResult, ScanError, FfmpegStatus, AppSettings structs)
+- `src-tauri/src/services/volume_tracker.rs` (platform-specific UUID detection: Linux blkid/by-uuid, macOS diskutil, Windows wmic)
+- `src-tauri/src/commands/volumes.rs` (detect_volumes, get_volumes, refresh_volume_status — all registered in main.rs)
 - `src-tauri/src/commands/mod.rs`
-- **Tests:** volume UUID extraction on current platform, SQLite schema creation + WAL mode verify
+- **Tests passed:** volume UUID extraction on Linux, SQLite schema creation, WAL mode verify, CRUD operations, volume online/offline tracking
 
-### 1.3: Shared UI Components
+### 1.3: Shared UI Components ✅ COMPLETED
+**Status:** Done. 12 components, 2 hooks, 1 utility module, 49 tests passing.
 **Creates:** Reusable dumb components used by all features.
 **Files:**
 - `src/shared/ui/Button.tsx`, `Modal.tsx`, `Spinner.tsx`, `Badge.tsx`, `Skeleton.tsx`, `SearchInput.tsx`
@@ -187,6 +197,138 @@ When starting a task: (1) state which task, (2) list files you'll create/modify,
 
 ---
 
+## Phase 5 — Advanced Gallery Modes & Smart Linking
+
+### 5.1: Advanced Gallery Viewing Modes & UI
+**Depends on:** 2.6 (Gallery Viewer UI)
+**Creates:** Long Strip (Webtoon) continuous scroll mode, Infinite Slider with thumbnail scrubber, and assistive reading tools.
+
+**Sub-tasks:**
+
+#### 5.1a: Long Strip / Webtoon Mode (Continuous Vertical Scroll)
+- Implement a seamless continuous vertical scroll reader mode for uninterrupted reading
+- All gallery pages rendered in a single virtualized vertical column (using `@tanstack/react-virtual`)
+- Preload 2-3 pages above/below viewport for smooth scrolling
+- Auto-track reading progress as user scrolls (update `lastReadPage` based on viewport center)
+- Keyboard: `Space` scrolls down one viewport height, `Shift+Space` scrolls up
+- Support fit-to-width by default in this mode (images stretch to content width)
+
+**Files:**
+- `src/features/gallery-viewer/ui/LongStripReader.tsx` — Continuous vertical scroll container with virtual list
+- `src/features/gallery-viewer/ui/LongStripPage.tsx` — Individual page wrapper (lazy load, intersection tracking)
+- `src/features/gallery-viewer/model/useGalleryReaderStore.ts` — Add `longStrip` reading mode state + scroll position tracking
+- **Tests:** Scroll position → page tracking, virtualized render with 1000+ items, preload buffer behavior
+
+#### 5.1b: Infinite Slider (Scrubbable Thumbnail Scrollbar)
+- Add a side-panel or bottom-panel slider that displays real-time thumbnail previews as the user scrubs
+- Dragging the slider handle shows a floating thumbnail preview of the target page
+- Clicking anywhere on the slider jumps to that page instantly
+- Slider position syncs bidirectionally with current page (scrolling updates slider, slider updates page)
+- Works across all reading modes (single, double, vertical scroll, long strip)
+
+**Files:**
+- `src/features/gallery-viewer/ui/InfiniteSlider.tsx` — Scrubbable scrollbar with thumbnail preview popup
+- `src/features/gallery-viewer/ui/SliderThumbnailPreview.tsx` — Floating thumbnail preview shown on hover/drag
+- `src/features/gallery-viewer/model/useGalleryReaderStore.ts` — Add slider position sync state
+- **Tests:** Slider position ↔ page index sync, thumbnail preview render on hover, boundary clamping
+
+#### 5.1c: Assistive Reading Tools
+- **Fit modes:** Toggle between fit-to-width, fit-to-height, and original size
+- **Reading direction:** Switch between LTR (left-to-right), RTL (right-to-left, for manga), and Vertical (top-to-bottom)
+- **Auto-scroll:** Configurable auto-scroll with adjustable speed (pixels/second), pause on hover, resume on mouse leave
+- Reading direction affects page turn behavior: RTL swaps left/right click zones and arrow key bindings
+- Persist per-gallery reading direction preference in Zustand store
+
+**Files:**
+- `src/features/gallery-viewer/ui/ReadingToolbar.tsx` — Toolbar with fit mode, direction, and auto-scroll controls
+- `src/features/gallery-viewer/ui/AutoScrollController.tsx` — Auto-scroll logic with speed slider and pause/resume
+- `src/features/gallery-viewer/model/useReadingToolsStore.ts` — Fit mode, direction, auto-scroll speed state
+- `src/shared/types/media.ts` — Add `ReadingDirection`, `FitMode`, `AutoScrollConfig` types
+- **Tests:** RTL direction reverses navigation, auto-scroll speed calculation, fit mode CSS class application
+
+---
+
+### 5.2: Smart Collection Linking (Fuzzy Matching)
+**Depends on:** 2.1 (Rust Scanner)
+**Creates:** Intelligent grouping system that detects high-similarity folder names and links them into unified "Smart Groups."
+
+**Algorithm:**
+1. For each artist's gallery list, extract normalized names: strip separators (`-`, `_`, ` `), lowercase
+2. Apply regex pattern matching to detect common naming conventions (e.g., `justin-1`, `justin_1`, `justin1` → base name `justin`)
+3. Compute Levenshtein distance between normalized names; threshold ≤ 2 (configurable) = same group
+4. Combine regex hits and fuzzy matches into Smart Groups, each with a canonical display name
+5. Store Smart Group associations in SQLite for fast retrieval
+
+**Files:**
+- `src-tauri/src/services/smart_grouping.rs` — Core fuzzy matching engine:
+  - `normalize_name(name: &str) -> String` — Strip separators, lowercase, remove trailing numbers
+  - `extract_base_name(name: &str) -> (String, Option<u32>)` — Regex: split into base name + optional sequence number
+  - `levenshtein_distance(a: &str, b: &str) -> usize` — Standard edit distance
+  - `compute_smart_groups(galleries: &[Gallery]) -> Vec<SmartGroup>` — Main grouping algorithm
+- `src-tauri/src/models/smart_group.rs` — `SmartGroup` struct (group name, member gallery IDs, confidence score)
+- `src-tauri/src/commands/smart_groups.rs` — Tauri commands: `get_smart_groups`, `merge_smart_group`, `unlink_smart_group`
+- `src-tauri/src/db/schema.sql` — New `smart_groups` + `smart_group_members` tables
+- `src/features/browse-artists/ui/SmartGroupBadge.tsx` — Visual indicator showing linked galleries
+- `src/features/browse-artists/ui/SmartGroupPanel.tsx` — Side panel listing all members of a Smart Group
+- `src/shared/types/gallery.ts` — Add `SmartGroup` TypeScript type
+- **Tests:** `justin-1` + `justin_1` + `justin1` → same group; `alice` + `bob` → no match; Unicode names; single-gallery no-group; configurable threshold
+
+---
+
+### 5.3: Chronological Smart Linking
+**Depends on:** 2.1 (Rust Scanner), 5.2 (Smart Collection Linking)
+**Creates:** Date-parsing utility that detects date-named galleries/folders and enables "Next/Previous" chronological navigation between them.
+
+**Date Formats Detected:**
+- `YYYY-MM-DD` (ISO 8601): `2024-03-15`
+- `YYYYMMDD`: `20240315`
+- `YYYY.MM.DD`: `2024.03.15`
+- `MM-DD-YYYY` / `DD-MM-YYYY`: `03-15-2024` (with heuristic disambiguation)
+- `MonthName YYYY` / `YYYY MonthName`: `March 2024`, `2024 March`
+- Mixed: `gallery_2024-03-15_photos`, `shoot-20240315`
+
+**Files:**
+- `src-tauri/src/services/date_parser.rs` — Date extraction from folder/gallery names:
+  - `extract_date(name: &str) -> Option<NaiveDate>` — Try all supported formats via regex
+  - `sort_by_date(galleries: &mut [Gallery])` — Sort galleries by extracted date
+  - `build_chronological_chain(galleries: &[Gallery]) -> Vec<ChronologicalLink>` — Prev/next links
+- `src-tauri/src/models/smart_group.rs` — Add `ChronologicalLink` struct (gallery ID, prev ID, next ID, parsed date)
+- `src-tauri/src/commands/smart_groups.rs` — Add `get_chronological_neighbors` command
+- `src/features/gallery-viewer/ui/ChronologicalNav.tsx` — "← Previous (Mar 14)" / "Next (Mar 16) →" buttons in reader header
+- `src/features/browse-artists/ui/ChronologicalTimeline.tsx` — Visual timeline bar on artist page showing date-linked galleries
+- `src/shared/types/gallery.ts` — Add `ChronologicalLink` TypeScript type
+- **Tests:** ISO date extraction, mixed-format folder names, ambiguous MM/DD handling, prev/next chain integrity, galleries with no date → excluded from chain
+
+---
+
+### 5.4: Custom Timeline Navigation (Per-Image)
+**Depends on:** 2.1 (Rust Scanner), 5.3 (Chronological Smart Linking)
+**Creates:** Parse date formats from individual image filenames and render a visual "Timeline" navigation mode for browsing images along a chronological axis.
+
+**Filename Date Patterns:**
+- Camera-style: `IMG_20240315_001.jpg`, `DSC_20240315_001.jpg`
+- EXIF-style: `20240315_143022.jpg` (date + time)
+- Custom: `photo_2024-03-15.jpg`, `2024.03.15 vacation 001.jpg`
+- Fallback: use file `mtime` if no date parseable from filename
+
+**Files:**
+- `src-tauri/src/services/date_parser.rs` — Extend with `extract_date_from_filename(filename: &str) -> Option<NaiveDateTime>`:
+  - Camera naming patterns via regex
+  - EXIF-style timestamp parsing
+  - Fallback to `mtime` from filesystem stat
+- `src-tauri/src/commands/timeline.rs` — Tauri commands:
+  - `get_timeline_data({ galleryId: number }) -> TimelineEntry[]` — Returns date-bucketed media entries
+  - `get_timeline_range({ galleryId: number, start: string, end: string }) -> MediaEntry[]` — Filter by date range
+- `src-tauri/src/models/media.rs` — Add `TimelineEntry` struct (date, media entry IDs, thumbnail paths)
+- `src/features/gallery-viewer/ui/TimelineView.tsx` — Horizontal timeline axis with date markers and image thumbnails plotted along it
+- `src/features/gallery-viewer/ui/TimelineScrubber.tsx` — Draggable scrubber along the timeline axis, snaps to date clusters
+- `src/features/gallery-viewer/ui/TimelineDateMarker.tsx` — Date label components on the timeline axis
+- `src/features/gallery-viewer/model/useTimelineStore.ts` — Timeline zoom level, visible date range, selected entry
+- `src/shared/types/media.ts` — Add `TimelineEntry`, `TimelineRange` TypeScript types
+- **Tests:** Camera-style filename parsing, EXIF timestamp extraction, mtime fallback, timeline bucketing by day/week/month, scrubber position → date mapping
+
+---
+
 ## Parallel Safety Matrix
 
 Tasks on the same row can be developed simultaneously with zero file conflicts:
@@ -199,6 +341,10 @@ Tasks on the same row can be developed simultaneously with zero file conflicts:
 | D | 3.1 + 3.3 + 3.4 + 3.5 | All different folders |
 | E | 3.2 + 3.6 + 3.7 + 3.8 | All different folders |
 | F | 3.9 + 3.10 | Different Rust services + commands |
+| G | 5.1a + 5.1b + 5.1c | All within gallery-viewer feature, but different files |
+| H | 5.2 (Smart Grouping) + 5.1 (Gallery Modes) | Rust service vs frontend feature, no file overlap |
+| I | 5.3 (Chrono Linking) + 5.1 (Gallery Modes) | Rust service vs frontend feature |
+| J | 5.4 (Timeline Nav) | Depends on 5.3, must be sequential |
 
 **Merge-sensitive files** (only need line appends, low conflict risk):
 - `src/app/routes.tsx` — add route entry
