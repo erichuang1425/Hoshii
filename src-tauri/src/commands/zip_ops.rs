@@ -163,7 +163,7 @@ mod tests {
         let file = std::fs::File::create(&zip_path).unwrap();
         let mut zip_writer = zip::ZipWriter::new(file);
         zip_writer
-            .start_file("test.txt", zip::write::SimpleFileOptions::default())
+            .start_file("test.txt", zip::write::FileOptions::default())
             .unwrap();
         zip_writer.write_all(b"hello").unwrap();
         zip_writer.finish().unwrap();
@@ -197,7 +197,7 @@ mod tests {
         let file = std::fs::File::create(&zip_path).unwrap();
         let mut zip_writer = zip::ZipWriter::new(file);
         zip_writer
-            .start_file("image.jpg", zip::write::SimpleFileOptions::default())
+            .start_file("image.jpg", zip::write::FileOptions::default())
             .unwrap();
         zip_writer.write_all(b"fake image data").unwrap();
         zip_writer.finish().unwrap();

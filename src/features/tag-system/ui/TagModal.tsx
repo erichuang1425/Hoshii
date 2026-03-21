@@ -17,7 +17,7 @@ export function TagModal({ galleryId, galleryName, open, onClose }: TagModalProp
   const fetchGalleryTags = useTagStore((s) => s.fetchGalleryTags);
   const addTag = useTagStore((s) => s.addTag);
   const removeTag = useTagStore((s) => s.removeTag);
-  const { showToast } = useToast();
+  const toast = useToast();
 
   const [newTagName, setNewTagName] = useState('');
   const [adding, setAdding] = useState(false);
@@ -35,10 +35,10 @@ export function TagModal({ galleryId, galleryName, open, onClose }: TagModalProp
     try {
       await addTag(galleryId, name);
       setNewTagName('');
-      showToast({ type: 'success', message: t('tags.added') });
+      toast.success(t('tags.added'));
       inputRef.current?.focus();
     } catch {
-      showToast({ type: 'error', message: t('tags.addError') });
+      toast.error(t('tags.addError'));
     } finally {
       setAdding(false);
     }
@@ -47,9 +47,9 @@ export function TagModal({ galleryId, galleryName, open, onClose }: TagModalProp
   async function handleRemoveTag(tagId: number) {
     try {
       await removeTag(galleryId, tagId);
-      showToast({ type: 'success', message: t('tags.removed') });
+      toast.success(t('tags.removed'));
     } catch {
-      showToast({ type: 'error', message: t('tags.removeError') });
+      toast.error(t('tags.removeError'));
     }
   }
 

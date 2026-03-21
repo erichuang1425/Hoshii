@@ -24,7 +24,7 @@ interface VideoPlayerState {
 
 const AUTO_LOOP_THRESHOLD_MS = 30000;
 
-export const useVideoPlayerStore = create<VideoPlayerState>((set, get) => ({
+export const useVideoPlayerStore = create<VideoPlayerState>((set) => ({
   playing: false,
   currentTime: 0,
   duration: 0,

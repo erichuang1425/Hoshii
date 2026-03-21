@@ -31,7 +31,7 @@ export interface MediaGroup {
   count: number;
 }
 
-export type ReadingMode = 'single' | 'vertical_scroll' | 'double_page' | 'thumbnail_grid';
+export type ReadingMode = 'single' | 'vertical_scroll' | 'double_page' | 'thumbnail_grid' | 'long_strip';
 export type FitMode = 'fit_best' | 'fit_width' | 'fit_height' | 'original';
 export type ReadingDirection = 'ltr' | 'rtl' | 'vertical';
 

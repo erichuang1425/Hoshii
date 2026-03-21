@@ -1,5 +1,4 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import clsx from 'clsx';
 import type { MediaEntry } from '@/shared/types';
 import { toAssetUrl } from '@/shared/lib/assetUrl';
 import { needsRemux } from '@/shared/lib/mediaUtils';
@@ -17,7 +16,7 @@ interface VideoPlayerProps {
 export function VideoPlayer({ media }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [controlsVisible, setControlsVisible] = useState(true);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
