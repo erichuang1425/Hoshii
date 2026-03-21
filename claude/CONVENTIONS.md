@@ -75,6 +75,53 @@ try {
 }
 ```
 
+### Local State Sync with Props
+
+When using `useState` initialized from a prop, sync it when the prop changes:
+
+```typescript
+// ✅ CORRECT — sync local state with prop
+const [localValue, setLocalValue] = useState(gallery.favorited);
+useEffect(() => {
+  setLocalValue(gallery.favorited);
+}, [gallery.favorited]);
+
+// ❌ WRONG — local state goes stale when prop changes
+const [localValue, setLocalValue] = useState(gallery.favorited);
+// Never synced again after mount!
+```
+
+### Race Condition Prevention
+
+When async operations depend on rapidly-changing selections (e.g., dropdown changes), use a request counter:
+
+```typescript
+const requestRef = useRef(0);
+
+async function handleChange(id: number) {
+  const requestId = ++requestRef.current;
+  setSelectedId(id);
+  const data = await fetchData(id);
+  // Only apply if this is still the latest request
+  if (requestRef.current === requestId) {
+    setData(data);
+  }
+}
+```
+
+### Avoid Double Fetching
+
+Never split dependent fetches into separate `useEffect` hooks with overlapping deps:
+
+```typescript
+// ❌ WRONG — both fire on mount, causing double fetch
+useEffect(() => { fetch(id); }, [id]);
+useEffect(() => { fetch(id); }, [sort, id]);
+
+// ✅ CORRECT — single effect with all deps
+useEffect(() => { fetch(id); }, [sort, id]);
+```
+
 ### Drive Disconnect Pattern
 
 ```typescript

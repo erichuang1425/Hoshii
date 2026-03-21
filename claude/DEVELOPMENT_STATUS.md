@@ -312,12 +312,48 @@ Migrations are `include_str!()` compiled into the binary. No runtime file resolu
 
 ---
 
+## Post-Phase Bug-Fix Session — ✅ COMPLETE
+
+Systematic code review identified and fixed 12 bugs across 15 files. All 158 frontend tests pass, 0 TypeScript errors.
+
+### Frontend Fixes (9)
+
+| Bug | File(s) | Fix |
+|-----|---------|-----|
+| Favorite toggle stale closure — `localFavorited` never synced with `gallery.favorited` prop changes | `GalleryCard.tsx` | Added `useEffect` to sync `localFavorited` when `gallery.favorited` prop changes |
+| Move modal retained stale gallery selection | `FileManagerView.tsx` | Reset `selectedGalleryPath` to `''` when opening modal |
+| Silent localStorage failure in reader prefs | `useGalleryReaderStore.ts` | Added `logger.warn()` instead of empty catch block |
+| Missing error state in reading progress | `useReadingProgressStore.ts` | Added `saveError` and `fetchError` state fields |
+| Race condition on artist change — galleries could show for wrong artist | `FileManagerPage.tsx` | Added `artistRequestRef` counter to discard stale responses |
+| FIT_MODES labels hardcoded in English | `ReadingToolbar.tsx`, `translations.ts` | Added `reader.fitBest/fitWidth/fitHeight/fitOriginal` i18n keys (en + zh-TW) |
+| Double fetch on mount — two `useEffects` both called `fetchGalleries` | `ArtistPage.tsx` | Merged into single `useEffect` with `gallerySort` in deps |
+| Double search from URL — `setQuery()` + `search()` both fired | `SearchPage.tsx` | Removed redundant `setQuery()` call; `search()` already sets query |
+| ErrorBoundary test TypeScript error | `ErrorBoundary.test.tsx` | Added `React.JSX.Element` return type to throwing component |
+
+### Rust Backend Fixes (3)
+
+| Bug | File(s) | Fix |
+|-----|---------|-----|
+| Duplicate `Tag` struct — `tags.rs` had `gallery_count: i64`, models had `Option<i64>` | `commands/tags.rs` | Removed duplicate struct, import `Tag` from `crate::models` |
+| Gallery sort parameter silently ignored — backend always sorted by name | `commands/db_ops.rs`, `commands/scan_gallery.rs` | Added `sort: Option<String>` parameter, implemented 8 sort orders |
+| `.expect()` panic in production startup code | `main.rs` | Replaced with `match` + `log::warn()` |
+| Volume fallback could cause FK violation | `commands/root_folders.rs` | Added cascading fallback with error logging |
+
+### Lessons Learned
+
+See [BUG_FIX_GUIDE.md](BUG_FIX_GUIDE.md) for detailed educational writeup of each bug, detection method, and fix rationale.
+
+---
+
 ## Remaining Work (Post-Phase 6)
 
 All planned phases and hardening tasks are complete. Remaining items for future consideration:
 
 | Item | Priority | Description |
 |------|----------|-------------|
+| Mobile/remote access | MEDIUM | See [MOBILE_STRATEGY.md](MOBILE_STRATEGY.md) for phone access architecture with 2TB desktop data |
+| Cross-feature import cleanup | MEDIUM | `GalleryCard` imports from `favorites/` and `tag-system/`; `GalleryReader` from `chrono-linking/` and `reading-progress/` — lift to `shared/` or pass via props |
+| `long_strip` reading mode | MEDIUM | Referenced in settings but not implemented in `GalleryReader.tsx` — implement or remove |
 | EXIF date extraction | LOW | Currently only parses dates from filenames; could extract EXIF data for more accurate chronological linking |
 | Connection pooling | LOW | Replace `Mutex<Connection>` with a connection pool (`r2d2-sqlite`) for better concurrency |
 | E2E tests | LOW | Add Playwright or Cypress integration tests for full user flows |

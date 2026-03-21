@@ -2,7 +2,7 @@
 
 ## Quick Context
 
-Hoshii is a **local-first desktop gallery app** built with **Tauri v2 (Rust) + React 18 + TypeScript**. It manages artwork collections across multiple external hard drives. All 5 development phases are complete (209 tests passing).
+Hoshii is a **local-first desktop gallery app** built with **Tauri v2 (Rust) + React 18 + TypeScript**. It manages artwork collections across multiple external hard drives. All 6 development phases are complete + post-phase bug fixes (275+ tests passing).
 
 ## Documentation Map
 
@@ -20,6 +20,8 @@ Read these docs in `claude/` before making changes:
 | [MEDIA_DETECTION.md](claude/MEDIA_DETECTION.md) | File extension mapping, detection logic | Before touching media handling |
 | [NATURAL_SORT_TESTS.md](claude/NATURAL_SORT_TESTS.md) | Test fixtures for natural sort algorithm | Before touching sort logic |
 | [DEVELOPMENT_STATUS.md](claude/DEVELOPMENT_STATUS.md) | Implementation status, known debt, session insights | To understand current state |
+| [MOBILE_STRATEGY.md](claude/MOBILE_STRATEGY.md) | Phone access architecture for 2TB desktop data | Before implementing remote access |
+| [BUG_FIX_GUIDE.md](claude/BUG_FIX_GUIDE.md) | Educational guide: how and why each bug was found and fixed | Learning reference |
 
 ## Critical Rules
 
@@ -29,7 +31,9 @@ Read these docs in `claude/` before making changes:
 4. **Every async operation needs error handling.** Every file access must handle "drive disconnected."
 5. **No cross-feature-slice imports.** Share through `shared/` or props.
 6. **All SQL must be parameterized.** No string formatting for queries.
-7. **No `.unwrap()` in Rust production code.** No `any` in TypeScript.
+7. **No `.unwrap()` or `.expect()` in Rust production code.** No `any` in TypeScript.
+8. **Sync local state with props** — if `useState` is initialized from a prop, add a `useEffect` to sync on prop change.
+9. **Prevent race conditions** — use request counters for async operations triggered by user selection changes.
 
 ## Key Commands
 
