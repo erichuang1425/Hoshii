@@ -89,6 +89,11 @@ CREATE TABLE IF NOT EXISTS unorganized_files (
     mtime      INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS app_settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_root_volume ON root_folders(volume_id);
 CREATE INDEX IF NOT EXISTS idx_galleries_artist ON galleries(artist_id);

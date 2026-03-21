@@ -87,6 +87,7 @@ mod tests {
             "tags",
             "gallery_tags",
             "unorganized_files",
+            "app_settings",
         ];
 
         for table in &expected_tables {
