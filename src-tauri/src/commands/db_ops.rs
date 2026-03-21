@@ -284,13 +284,25 @@ pub fn get_artists(conn: &Connection, root_id: i64) -> Result<Vec<Artist>, Strin
 }
 
 /// Get all galleries for an artist (excluding soft-deleted).
-pub fn get_galleries(conn: &Connection, artist_id: i64) -> Result<Vec<Gallery>, String> {
+pub fn get_galleries(conn: &Connection, artist_id: i64, sort: Option<&str>) -> Result<Vec<Gallery>, String> {
+    let order_clause = match sort {
+        Some("name_desc") => "name COLLATE NOCASE DESC",
+        Some("date_desc") => "last_read_at DESC NULLS LAST, name COLLATE NOCASE",
+        Some("date_asc") => "last_read_at ASC NULLS LAST, name COLLATE NOCASE",
+        Some("size_asc") => "total_size ASC, name COLLATE NOCASE",
+        Some("size_desc") => "total_size DESC, name COLLATE NOCASE",
+        Some("pages_desc") => "page_count DESC, name COLLATE NOCASE",
+        Some("last_read") => "last_read_at DESC NULLS LAST, name COLLATE NOCASE",
+        _ => "name COLLATE NOCASE ASC",
+    };
+    let sql = format!(
+        "SELECT id, artist_id, name, path, page_count, total_size, cover_path, \
+         has_backup_zip, zip_status, last_read_page, last_read_at, favorited \
+         FROM galleries WHERE artist_id = ?1 AND is_deleted = FALSE ORDER BY {}",
+        order_clause
+    );
     let mut stmt = conn
-        .prepare(
-            "SELECT id, artist_id, name, path, page_count, total_size, cover_path, \
-             has_backup_zip, zip_status, last_read_page, last_read_at, favorited \
-             FROM galleries WHERE artist_id = ?1 AND is_deleted = FALSE ORDER BY name COLLATE NOCASE",
-        )
+        .prepare(&sql)
         .map_err(|e| format!("Failed to prepare query: {}", e))?;
 
     let entries = stmt

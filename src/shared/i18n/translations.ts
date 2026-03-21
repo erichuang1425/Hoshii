@@ -203,6 +203,10 @@ const translations: Record<string, Record<string, string>> = {
     'reader.dirLTR': 'Left to Right',
     'reader.dirRTL': 'Right to Left',
     'reader.dirVertical': 'Vertical',
+    'reader.fitBest': 'Best',
+    'reader.fitWidth': 'Width',
+    'reader.fitHeight': 'Height',
+    'reader.fitOriginal': '1:1',
     'reader.chronoNav': 'Chronological',
 
     // Smart Groups (Task 5.2)
@@ -436,6 +440,10 @@ const translations: Record<string, Record<string, string>> = {
     'reader.dirLTR': '從左到右',
     'reader.dirRTL': '從右到左',
     'reader.dirVertical': '垂直',
+    'reader.fitBest': '最佳',
+    'reader.fitWidth': '寬度',
+    'reader.fitHeight': '高度',
+    'reader.fitOriginal': '1:1',
     'reader.chronoNav': '時序瀏覽',
 
     // Smart Groups (Task 5.2)

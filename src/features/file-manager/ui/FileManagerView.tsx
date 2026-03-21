@@ -94,7 +94,7 @@ export function FileManagerView({ artistPath, galleries }: FileManagerViewProps)
         )}
         {selectedFiles.size > 0 && (
           <>
-            <Button variant="secondary" size="sm" onClick={() => setMoveModalOpen(true)}>
+            <Button variant="secondary" size="sm" onClick={() => { setSelectedGalleryPath(''); setMoveModalOpen(true); }}>
               {t('fileManager.moveSelected')}
             </Button>
             <Button variant="primary" size="sm" onClick={() => setCreateModalOpen(true)}>
