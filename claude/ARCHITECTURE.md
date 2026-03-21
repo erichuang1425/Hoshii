@@ -168,7 +168,7 @@ Drives are identified by **volume UUID** (not mount path), persisted in the DB. 
 ### Drive Lifecycle
 
 1. **App launch:** Scan mounted volumes → match UUIDs against DB → mark online/offline
-2. **Drive connected:** Periodic poll (5s) detects new mount → check if known → auto-show galleries
+2. **Drive connected:** Event-driven detection via Tauri events + 30s fallback poll → check if known → auto-show galleries
 3. **Drive disconnected:** File operations fail → catch errors → mark offline → grey out UI → **do NOT delete DB records** (soft delete only)
 4. **Drive reconnects at different path:** UUID matches → update mount_path → asset URLs regenerated
 
