@@ -21,12 +21,15 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
   const isUnread = !gallery.lastReadAt;
 
   const tags = useTagStore((s) => s.getGalleryTags(gallery.id));
+  const hasCachedTags = useTagStore((s) => gallery.id in s.galleryTags);
   const fetchGalleryTags = useTagStore((s) => s.fetchGalleryTags);
   const [tagModalOpen, setTagModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchGalleryTags(gallery.id);
-  }, [gallery.id, fetchGalleryTags]);
+    if (!hasCachedTags) {
+      fetchGalleryTags(gallery.id);
+    }
+  }, [gallery.id, hasCachedTags, fetchGalleryTags]);
 
   async function handleFavoriteClick(e: React.MouseEvent) {
     e.stopPropagation();

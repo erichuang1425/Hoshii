@@ -11,9 +11,16 @@ pub struct AppDatabase {
     pub conn: Mutex<Connection>,
 }
 
+/// Embedded migrations. Each entry is (version, name, SQL).
+/// Migrations are applied in order, skipping any already recorded in `schema_version`.
+const MIGRATIONS: &[(i32, &str, &str)] = &[
+    (1, "initial_schema", include_str!("migrations/001_initial_schema.sql")),
+    (2, "add_schema_version", include_str!("migrations/002_add_schema_version.sql")),
+];
+
 /// Initialize the SQLite database at `{app_data_dir}/hoshii/hoshii.db`.
 ///
-/// Sets WAL mode, foreign keys, and busy_timeout, then runs the schema DDL.
+/// Sets WAL mode, foreign keys, and busy_timeout, then runs migrations.
 pub fn init_db(app_data_dir: &Path) -> Result<Connection> {
     let db_dir = app_data_dir.join("hoshii");
     std::fs::create_dir_all(&db_dir)
@@ -35,13 +42,61 @@ pub fn init_db(app_data_dir: &Path) -> Result<Connection> {
 
     log::info!("Database PRAGMAs set: WAL mode, foreign_keys ON, busy_timeout 5000ms");
 
-    // Run schema creation (idempotent via IF NOT EXISTS)
+    // Run schema creation (idempotent via IF NOT EXISTS) for backward compat
     conn.execute_batch(include_str!("schema.sql"))
         .context("Failed to execute database schema")?;
+
+    // Run migrations
+    run_migrations(&conn)?;
 
     log::info!("Database schema initialized successfully");
 
     Ok(conn)
+}
+
+/// Run all unapplied migrations in order.
+fn run_migrations(conn: &Connection) -> Result<()> {
+    // Ensure schema_version table exists (migration 002 creates it,
+    // but we need it to track migrations themselves)
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS schema_version (
+            version    INTEGER PRIMARY KEY,
+            name       TEXT NOT NULL,
+            applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );"
+    )
+    .context("Failed to create schema_version table")?;
+
+    let current_version: i32 = conn
+        .query_row(
+            "SELECT COALESCE(MAX(version), 0) FROM schema_version",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+
+    log::info!("Current schema version: {}", current_version);
+
+    for &(version, name, sql) in MIGRATIONS {
+        if version <= current_version {
+            continue;
+        }
+
+        log::info!("Applying migration {}: {}", version, name);
+
+        conn.execute_batch(sql)
+            .with_context(|| format!("Failed to apply migration {}: {}", version, name))?;
+
+        conn.execute(
+            "INSERT INTO schema_version (version, name) VALUES (?1, ?2)",
+            rusqlite::params![version, name],
+        )
+        .with_context(|| format!("Failed to record migration {}", version))?;
+
+        log::info!("Migration {} applied successfully", version);
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -88,6 +143,7 @@ mod tests {
             "gallery_tags",
             "unorganized_files",
             "app_settings",
+            "schema_version",
         ];
 
         for table in &expected_tables {
@@ -122,5 +178,30 @@ mod tests {
             [],
         );
         assert!(result.is_err(), "Foreign key constraint should be enforced");
+    }
+
+    #[test]
+    fn test_migrations_applied() {
+        let tmp = TempDir::new().unwrap();
+        let conn = init_db(tmp.path()).unwrap();
+
+        let max_version: i32 = conn
+            .query_row("SELECT MAX(version) FROM schema_version", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(max_version, MIGRATIONS.len() as i32);
+    }
+
+    #[test]
+    fn test_migrations_idempotent() {
+        let tmp = TempDir::new().unwrap();
+        let conn = init_db(tmp.path()).unwrap();
+
+        // Running migrations again should not error (all already applied)
+        run_migrations(&conn).unwrap();
+
+        let count: i32 = conn
+            .query_row("SELECT COUNT(*) FROM schema_version", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(count, MIGRATIONS.len() as i32);
     }
 }

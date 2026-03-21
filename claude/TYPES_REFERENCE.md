@@ -62,6 +62,7 @@ export interface Artist {
   name: string;
   path: string;
   galleryCount: number;
+  coverPath: string | null;
 }
 
 export interface Gallery {
@@ -314,8 +315,8 @@ export interface TimelineRange {
 'search_by_tags'         → ({ tags: string[] })                        → Gallery[]
 
 // ═══════════ METADATA EXPORT ═══════════
-'export_metadata'        → ({ rootId: number })                        → string  // path to exported JSON
-'import_metadata'        → ({ rootId: number, filePath: string })      → { imported: number, skipped: number }
+'export_metadata'        → ({ galleryId: number })                     → string  // path to .hoshii-meta.json sidecar
+'import_metadata'        → ({ galleryId: number })                     → void    // imports from .hoshii-meta.json sidecar
 
 // ═══════════ SMART GROUPING ═══════════
 'get_smart_groups'           → ({ artistId: number })                    → SmartGroup[]

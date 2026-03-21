@@ -255,11 +255,15 @@ pub fn get_media_groups(conn: &Connection, gallery_id: i64) -> Result<Vec<MediaG
     Ok(groups)
 }
 
-/// Get all artists for a root folder.
+/// Get all artists for a root folder, including the cover path from their first gallery.
 pub fn get_artists(conn: &Connection, root_id: i64) -> Result<Vec<Artist>, String> {
     let mut stmt = conn
         .prepare(
-            "SELECT id, root_id, name, path, gallery_count FROM artists WHERE root_id = ?1 ORDER BY name COLLATE NOCASE",
+            "SELECT a.id, a.root_id, a.name, a.path, a.gallery_count, \
+             (SELECT g.cover_path FROM galleries g WHERE g.artist_id = a.id \
+              AND g.is_deleted = FALSE AND g.cover_path IS NOT NULL \
+              ORDER BY g.name COLLATE NOCASE LIMIT 1) AS cover_path \
+             FROM artists a WHERE a.root_id = ?1 ORDER BY a.name COLLATE NOCASE",
         )
         .map_err(|e| format!("Failed to prepare query: {}", e))?;
 
@@ -271,6 +275,7 @@ pub fn get_artists(conn: &Connection, root_id: i64) -> Result<Vec<Artist>, Strin
                 name: row.get(2)?,
                 path: row.get(3)?,
                 gallery_count: row.get(4)?,
+                cover_path: row.get(5)?,
             })
         })
         .map_err(|e| format!("Failed to query artists: {}", e))?;
