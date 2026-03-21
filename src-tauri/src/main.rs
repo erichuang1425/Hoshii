@@ -7,7 +7,7 @@ mod models;
 mod services;
 
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 fn main() {
     env_logger::init();
@@ -37,6 +37,40 @@ fn main() {
             app.manage(db::AppDatabase {
                 conn: Mutex::new(conn),
             });
+
+            // Initialize file watcher service
+            let file_watcher = services::file_watcher::FileWatcherService::new();
+            app.manage(Mutex::new(file_watcher));
+
+            // Start watching existing root folders
+            let app_handle = app.handle().clone();
+            let db_state = app.state::<db::AppDatabase>();
+            let root_paths: Vec<String> = {
+                let conn = db_state.conn.lock().map_err(|e| e.to_string())?;
+                let mut stmt = conn
+                    .prepare("SELECT path FROM root_folders")
+                    .unwrap_or_else(|_| conn.prepare("SELECT '' WHERE 0").expect("fallback query"));
+                stmt.query_map([], |row| row.get(0))
+                    .map(|rows| rows.filter_map(|r| r.ok()).collect())
+                    .unwrap_or_default()
+            };
+
+            let watcher_state = app.state::<Mutex<services::file_watcher::FileWatcherService>>();
+            if let Ok(watcher) = watcher_state.lock() {
+                for root_path in &root_paths {
+                    let handle = app_handle.clone();
+                    let rp = root_path.clone();
+                    if let Err(e) = watcher.watch_root(root_path, move |changed_paths| {
+                        log::info!("File changes detected in root: {}, {} files changed", rp, changed_paths.len());
+                        let _ = handle.emit("gallery_updated", serde_json::json!({
+                            "rootPath": rp,
+                            "changedPaths": changed_paths.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
+                        }));
+                    }) {
+                        log::warn!("Failed to start watcher for {}: {}", root_path, e);
+                    }
+                }
+            }
 
             log::info!("Database initialized and managed by Tauri");
             Ok(())

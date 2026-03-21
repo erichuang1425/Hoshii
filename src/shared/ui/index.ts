@@ -11,3 +11,4 @@ export { OfflineOverlay } from './OfflineOverlay';
 export { DriveStatusDot } from './DriveStatusDot';
 export { MediaBadge } from './MediaBadge';
 export { ProgressBar } from './ProgressBar';
+export { ErrorBoundary } from './ErrorBoundary';
