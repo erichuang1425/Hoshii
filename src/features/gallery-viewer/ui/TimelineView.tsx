@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import clsx from 'clsx';
 import type { TimelineEntry } from '@/shared/types';
 import { t } from '@/shared/i18n';

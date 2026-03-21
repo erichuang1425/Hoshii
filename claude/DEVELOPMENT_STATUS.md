@@ -1,6 +1,6 @@
 # Development Status
 
-**All 5 planned phases are complete. Phase 6 (Hardening) in progress.** 130 frontend tests passing. Rust tests require `libgtk-3-dev` to compile.
+**All 5 planned phases are complete. Phase 6 (Hardening) in progress.** 130 frontend tests + 117 Rust tests = 247 total tests passing.
 
 ---
 
@@ -44,12 +44,18 @@ All core features are built. This phase focuses on fixing bugs, wiring up unconn
 
 ### 6.1: Fix Known Bugs — ✅ COMPLETE
 
-Both bugs have been fixed:
+All bugs have been fixed:
 
 | Bug | File | Status |
 |-----|------|--------|
 | `thumbnail_grid` mode uses raw `entry.path` instead of `toAssetUrl()` | `GalleryReader.tsx` | ✅ Fixed — line 173 uses `toAssetUrl(entry.path)` |
 | `getFavoriteGalleries` fetches ALL galleries and filters client-side | `favoritesApi.ts` | ✅ Fixed — calls `get_favorite_galleries` Rust command directly |
+| 12 TypeScript compilation errors (showToast API mismatch, unused imports, read-only ref, missing ReadingMode variant) | Multiple | ✅ Fixed |
+| 2 Rust compilation errors (`SimpleFileOptions` → `FileOptions` for zip 0.6) | `zip_ops.rs` | ✅ Fixed |
+| `normalize_name` didn't strip `vol.`/`ch.` suffixes (with dots) | `smart_grouping.rs` | ✅ Fixed — keywords now include dot variants |
+| `try_ym_separated` incorrectly skipped `YYYY_MM_text` patterns | `chrono_linking.rs` | ✅ Fixed — now checks if chars after separator are digits before skipping |
+| `ReadingMode` type missing `'long_strip'` variant | `media.ts` | ✅ Fixed |
+| Unused `rusqlite::params` imports causing warnings | `favorites.rs`, `tags.rs` | ✅ Fixed |
 
 ---
 
@@ -287,7 +293,7 @@ All Phase 6 tasks can be done independently. No file conflicts between tasks exc
 
 | Suite | Tests |
 |-------|-------|
-| Rust (all services) | 79 |
+| Rust (all services) | 117 |
 | Shared UI | 49 |
 | Browse Roots store | 5 |
 | Browse Artists store | 6 |
@@ -302,9 +308,9 @@ All Phase 6 tasks can be done independently. No file conflicts between tasks exc
 | Smart Groups store | 4 |
 | Chrono store | 7 |
 | **Frontend total** | **130** |
-| **Grand total** | **209** |
+| **Grand total** | **247** |
 
-**Note:** Rust tests require `libgtk-3-dev` (not available in all containers). Frontend tests run cleanly with `npx vitest run`.
+**Note:** Rust tests require `libgtk-3-dev` and other Tauri system dependencies. Frontend tests run cleanly with `npx vitest run`. Run `npm install` before frontend tests.
 
 ---
 

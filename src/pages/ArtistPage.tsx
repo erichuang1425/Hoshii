@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Spinner, SearchInput } from '@/shared/ui';
+import { Spinner } from '@/shared/ui';
 import { t } from '@/shared/i18n';
 import { GalleryCard } from '@/features/browse-artists/ui/GalleryCard';
 import { useBrowseArtistsStore } from '@/features/browse-artists/model/useBrowseArtistsStore';

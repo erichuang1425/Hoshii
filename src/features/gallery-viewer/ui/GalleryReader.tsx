@@ -23,7 +23,7 @@ interface GalleryReaderProps {
 
 export function GalleryReader({ galleryId, artistId }: GalleryReaderProps) {
   const navigate = useNavigate();
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const webtoonScrollRef = useRef<HTMLDivElement>(null);
 
   const media = useGalleryReaderStore((s) => s.media);
