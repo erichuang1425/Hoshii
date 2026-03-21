@@ -1,6 +1,6 @@
 # Development Status
 
-**All 5 planned phases are complete.** 209 tests passing (79 Rust + 130 frontend).
+**All 5 planned phases are complete. Phase 6 (Hardening) in progress.** 130 frontend tests passing. Rust tests require `libgtk-3-dev` to compile.
 
 ---
 
@@ -53,44 +53,53 @@ Both bugs have been fixed:
 
 ---
 
-### 6.2: Implement Missing Rust Commands
+### 6.2: Implement Missing Rust Commands — ✅ COMPLETE (16 of 18 commands)
 
-**Priority: HIGH** — The frontend expects these commands but they don't exist in the backend.
+All frontend-referenced Rust commands have been implemented and registered in `main.rs`. The `app_settings` key-value table was added to the schema. The `AppSettings` Rust model was updated to include all 17 fields matching the frontend type.
 
-| Command | Signature | Purpose |
-|---------|-----------|---------|
-| `get_settings` | `() → AppSettings` | Load persisted app settings from SQLite |
-| `update_settings` | `(settings: Partial<AppSettings>) → AppSettings` | Save settings to SQLite |
-| `add_root_folder` | `({ path, label? }) → RootFolder` | Add root folder + register asset scope |
-| `remove_root_folder` | `({ id }) → void` | Remove root folder from DB |
-| `get_root_folders` | `() → RootFolder[]` | List all root folders |
-| `toggle_favorite` | `({ galleryId }) → boolean` | Toggle gallery favorite status |
-| `update_reading_progress` | `({ galleryId, page }) → void` | Save reading progress |
-| `get_recent_galleries` | `({ limit }) → Gallery[]` | Get recently read galleries |
-| `add_tag` | `({ galleryId, tag }) → Tag` | Add tag to gallery |
-| `remove_tag` | `({ galleryId, tagId }) → void` | Remove tag from gallery |
-| `get_gallery_tags` | `({ galleryId }) → Tag[]` | Get tags for a gallery |
-| `search_by_tags` | `({ tags }) → Gallery[]` | Find galleries by tag names |
-| `search_galleries` | `({ query, rootId? }) → Gallery[]` | Text search galleries |
-| `move_files_to_gallery` | `({ files, galleryPath }) → void` | Move files into a gallery folder |
-| `create_gallery_folder` | `({ artistPath, name }) → Gallery` | Create new gallery directory + DB record |
-| `verify_zip_integrity` | `({ artistPath }) → [{ gallery, status }]` | Check zip files against gallery folders |
-| `restore_from_zip` | `({ zipPath, targetDir }) → void` | Extract zip to restore a gallery |
-| `export_metadata` | `({ rootId }) → string` | Export `.hoshii-meta.json` sidecar |
-| `import_metadata` | `({ rootId, filePath }) → { imported, skipped }` | Import sidecar metadata |
+**Implemented commands (16):**
 
-**Files to create/modify:**
-- `src-tauri/src/commands/settings.rs` — get/update settings
-- `src-tauri/src/commands/root_folders.rs` — add/remove/list root folders
-- `src-tauri/src/commands/gallery_ops.rs` — toggle_favorite, update_progress, recent, search
-- `src-tauri/src/commands/tag_ops.rs` — tag CRUD + search by tags
-- `src-tauri/src/commands/file_ops.rs` — move files, create gallery folder
-- `src-tauri/src/commands/zip_ops.rs` — verify + restore
-- `src-tauri/src/commands/metadata_export.rs` — export/import sidecar
-- `src-tauri/src/main.rs` — register all new commands
-- `src-tauri/src/db/schema.sql` — add `app_settings` table (key-value store)
+| Command | File | Status |
+|---------|------|--------|
+| `get_settings` | `commands/settings.rs` | ✅ |
+| `update_settings` | `commands/settings.rs` | ✅ |
+| `get_root_folders` | `commands/root_folders.rs` | ✅ |
+| `add_root_folder` | `commands/root_folders.rs` | ✅ |
+| `remove_root_folder` | `commands/root_folders.rs` | ✅ |
+| `toggle_favorite` | `commands/gallery_ops.rs` | ✅ |
+| `update_reading_progress` | `commands/gallery_ops.rs` | ✅ |
+| `get_recent_galleries` | `commands/gallery_ops.rs` | ✅ |
+| `search_galleries` | `commands/gallery_ops.rs` | ✅ |
+| `get_gallery_tags` | `commands/tag_ops.rs` | ✅ |
+| `add_tag` | `commands/tag_ops.rs` | ✅ |
+| `remove_tag` | `commands/tag_ops.rs` | ✅ |
+| `search_by_tags` | `commands/tag_ops.rs` | ✅ |
+| `get_unorganized_files` | `commands/file_ops.rs` | ✅ |
+| `move_files_to_gallery` | `commands/file_ops.rs` | ✅ |
+| `create_gallery_folder` | `commands/file_ops.rs` | ✅ |
+| `verify_zip_integrity` | `commands/zip_ops.rs` | ✅ |
+| `restore_from_zip` | `commands/zip_ops.rs` | ✅ |
 
-**Note:** Some of these commands exist as partial implementations in `db_ops.rs` (e.g., upsert_artist, upsert_gallery). The task is to expose them as proper Tauri commands matching the signatures in TYPES_REFERENCE.md.
+**Remaining (2, lower priority):**
+
+| Command | Purpose | Status |
+|---------|---------|--------|
+| `export_metadata` | Export `.hoshii-meta.json` sidecar | Pending |
+| `import_metadata` | Import sidecar metadata | Pending |
+
+**Files created:**
+- `src-tauri/src/commands/settings.rs`
+- `src-tauri/src/commands/root_folders.rs`
+- `src-tauri/src/commands/gallery_ops.rs`
+- `src-tauri/src/commands/tag_ops.rs`
+- `src-tauri/src/commands/file_ops.rs`
+- `src-tauri/src/commands/zip_ops.rs`
+
+**Files modified:**
+- `src-tauri/src/commands/mod.rs` — added 6 new modules
+- `src-tauri/src/main.rs` — registered 18 new commands (40 total)
+- `src-tauri/src/db/schema.sql` — added `app_settings` table
+- `src-tauri/src/models/scan.rs` — added 6 missing fields to `AppSettings`
 
 ---
 
@@ -315,14 +324,14 @@ Browse Roots (12), Browse Artists (14), Gallery Viewer (3), Video Player (6), Si
 | `ArtistCard` uses placeholder, not first gallery cover | `ArtistCard.tsx` | UI |
 | ~~`thumbnail_grid` mode uses raw `entry.path`, not `toAssetUrl()`~~ | `GalleryReader.tsx` | ~~Bug~~ ✅ Fixed |
 | ~~`getFavoriteGalleries` filters all galleries client-side~~ | `favoritesApi.ts` | ~~PERF~~ ✅ Fixed |
-| 15 frontend `invoke()` calls reference unimplemented Rust commands | Backend | **Critical** |
+| ~~15 frontend `invoke()` calls reference unimplemented Rust commands~~ | Backend | ~~Critical~~ ✅ Fixed |
 | `SmartGroupsPanel` not wired into `ArtistPage`/`GalleryPage` sidebar | `SmartGroupsPanel.tsx` | Missing |
 | EXIF date extraction not implemented (filename-based only) | `chrono_linking.rs` | Feature gap |
 | No Error Boundary | `App.tsx` | Robustness |
 | `reading-progress` feature is an empty stub | `features/reading-progress/` | Missing |
 | File watcher (`notify`) imported but not integrated | `services/file_watcher.rs` | Missing |
-| Settings commands (`get_settings`/`update_settings`) not implemented | Backend | Missing |
-| No metadata export/import commands | Backend | Missing |
+| ~~Settings commands (`get_settings`/`update_settings`) not implemented~~ | Backend | ~~Missing~~ ✅ Fixed |
+| Metadata export/import commands not implemented | Backend | Missing |
 | No database migration system | `db/mod.rs` | Tech debt |
 | File Manager + Zip Recovery have no frontend tests | Frontend | Test gap |
 

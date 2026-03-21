@@ -55,6 +55,12 @@ pub struct AppSettings {
     pub gallery_sort_order: String,
     pub thumbnail_cache_max_mb: i64,
     pub auto_export_metadata: bool,
+    pub default_reading_direction: String,
+    pub default_fit_mode: String,
+    pub auto_scroll_speed: i64,
+    pub smart_grouping_threshold: i64,
+    pub enable_smart_grouping: bool,
+    pub enable_chronological_linking: bool,
 }
 
 impl Default for AppSettings {
@@ -71,6 +77,12 @@ impl Default for AppSettings {
             gallery_sort_order: "name_asc".to_string(),
             thumbnail_cache_max_mb: 2048,
             auto_export_metadata: false,
+            default_reading_direction: "ltr".to_string(),
+            default_fit_mode: "fit_best".to_string(),
+            auto_scroll_speed: 50,
+            smart_grouping_threshold: 2,
+            enable_smart_grouping: true,
+            enable_chronological_linking: true,
         }
     }
 }
