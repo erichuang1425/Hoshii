@@ -42,16 +42,14 @@ All core features are built. This phase focuses on fixing bugs, wiring up unconn
 
 ---
 
-### 6.1: Fix Known Bugs
+### 6.1: Fix Known Bugs — ✅ COMPLETE
 
-**Priority: HIGH** — These are broken behaviors in existing code.
+Both bugs have been fixed:
 
-| Bug | File | Fix |
-|-----|------|-----|
-| `thumbnail_grid` mode uses raw `entry.path` instead of `toAssetUrl()` | `GalleryReader.tsx` | Replace `entry.path` with `toAssetUrl(entry.path)` in thumbnail grid render |
-| `getFavoriteGalleries` fetches ALL galleries and filters client-side | `favoritesApi.ts` | Use the existing `get_favorite_galleries` Rust command instead of `search_galleries('')` + filter |
-
-**Files to touch:** `src/features/gallery-viewer/ui/GalleryReader.tsx`, `src/features/favorites/api/favoritesApi.ts`
+| Bug | File | Status |
+|-----|------|--------|
+| `thumbnail_grid` mode uses raw `entry.path` instead of `toAssetUrl()` | `GalleryReader.tsx` | ✅ Fixed — line 173 uses `toAssetUrl(entry.path)` |
+| `getFavoriteGalleries` fetches ALL galleries and filters client-side | `favoritesApi.ts` | ✅ Fixed — calls `get_favorite_galleries` Rust command directly |
 
 ---
 
@@ -315,8 +313,9 @@ Browse Roots (12), Browse Artists (14), Gallery Viewer (3), Video Player (6), Si
 | Polls drives every 5s instead of Tauri events | `useDriveStatus.ts` | UX |
 | Light mode CSS not implemented | `global.css` | UI |
 | `ArtistCard` uses placeholder, not first gallery cover | `ArtistCard.tsx` | UI |
-| `thumbnail_grid` mode uses raw `entry.path`, not `toAssetUrl()` | `GalleryReader.tsx` | Bug |
-| `getFavoriteGalleries` filters all galleries client-side | `favoritesApi.ts` | PERF |
+| ~~`thumbnail_grid` mode uses raw `entry.path`, not `toAssetUrl()`~~ | `GalleryReader.tsx` | ~~Bug~~ ✅ Fixed |
+| ~~`getFavoriteGalleries` filters all galleries client-side~~ | `favoritesApi.ts` | ~~PERF~~ ✅ Fixed |
+| 15 frontend `invoke()` calls reference unimplemented Rust commands | Backend | **Critical** |
 | `SmartGroupsPanel` not wired into `ArtistPage`/`GalleryPage` sidebar | `SmartGroupsPanel.tsx` | Missing |
 | EXIF date extraction not implemented (filename-based only) | `chrono_linking.rs` | Feature gap |
 | No Error Boundary | `App.tsx` | Robustness |
