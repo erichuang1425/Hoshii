@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import type { Artist } from '@/shared/types';
 import { Badge } from '@/shared/ui';
+import { toAssetUrl } from '@/shared/lib/assetUrl';
 import { t } from '@/shared/i18n';
 
 interface ArtistCardProps {
@@ -25,20 +26,31 @@ export function ArtistCard({ artist }: ArtistCardProps) {
         'cursor-pointer hover:border-[var(--border-hover)] hover:bg-[var(--bg-hover)]',
       )}
     >
-      {/* Thumbnail placeholder */}
+      {/* Thumbnail */}
       <div
-        className="flex items-center justify-center bg-[var(--bg-elevated)]"
+        className="relative overflow-hidden bg-[var(--bg-elevated)]"
         style={{ aspectRatio: 'var(--thumb-ratio)' }}
       >
-        <svg
-          className="h-12 w-12 text-[var(--text-muted)] opacity-40"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-        </svg>
+        {artist.coverPath ? (
+          <img
+            src={toAssetUrl(artist.coverPath)}
+            alt={artist.name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <svg
+              className="h-12 w-12 text-[var(--text-muted)] opacity-40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+          </div>
+        )}
       </div>
 
       {/* Info area */}

@@ -117,6 +117,8 @@ fn main() {
             commands::file_ops::create_gallery_folder,
             commands::zip_ops::verify_zip_integrity,
             commands::zip_ops::restore_from_zip,
+            commands::metadata_io::export_metadata,
+            commands::metadata_io::import_metadata,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hoshii");

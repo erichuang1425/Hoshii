@@ -13,6 +13,7 @@ interface TagState {
   error: string | null;
 
   fetchGalleryTags: (galleryId: number) => Promise<void>;
+  fetchBatchGalleryTags: (galleryIds: number[]) => Promise<void>;
   addTag: (galleryId: number, tagName: string) => Promise<void>;
   removeTag: (galleryId: number, tagId: number) => Promise<void>;
   filterByTags: (tags: string[]) => Promise<void>;
@@ -36,6 +37,23 @@ export const useTagStore = create<TagState>((set, get) => ({
     } catch (err) {
       logger.error('Failed to fetch gallery tags', { galleryId, error: String(err) });
     }
+  },
+
+  fetchBatchGalleryTags: async (galleryIds) => {
+    const uncached = galleryIds.filter((id) => !(id in get().galleryTags));
+    if (uncached.length === 0) return;
+    const results = await Promise.allSettled(
+      uncached.map((id) => api.getGalleryTags(id).then((tags) => ({ id, tags }))),
+    );
+    const batch: Record<number, Tag[]> = {};
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        batch[result.value.id] = result.value.tags;
+      }
+    }
+    set((s) => ({
+      galleryTags: { ...s.galleryTags, ...batch },
+    }));
   },
 
   addTag: async (galleryId, tagName) => {

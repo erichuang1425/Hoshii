@@ -22,6 +22,7 @@ pub struct Artist {
     pub name: String,
     pub path: String,
     pub gallery_count: i64,
+    pub cover_path: Option<String>,
 }
 
 /// A subfolder within an artist directory containing ordered media files.

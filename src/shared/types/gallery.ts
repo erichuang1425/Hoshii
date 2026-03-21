@@ -14,6 +14,7 @@ export interface Artist {
   name: string;
   path: string;
   galleryCount: number;
+  coverPath: string | null;
 }
 
 export interface Gallery {

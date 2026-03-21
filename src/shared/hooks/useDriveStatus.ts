@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
+import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@/shared/api/invoke';
 import { logger } from '@/shared/lib/logger';
 import type { Volume } from '@/shared/types';
 
+interface VolumeStatusPayload {
+  volumeId: number;
+  isOnline: boolean;
+}
+
 /**
  * Returns whether the volume with the given ID is currently online.
- * Polls on mount; listens for volume status events.
+ * Listens for `volume_status_changed` Tauri events with a polling fallback.
  */
 export function useDriveStatus(volumeId: number | null): boolean {
   const [online, setOnline] = useState(true);
@@ -30,13 +36,32 @@ export function useDriveStatus(volumeId: number | null): boolean {
       }
     }
 
+    // Initial check
     check();
 
-    // TODO(debt): [UX] Listen to Tauri event `volume_status_changed` instead of polling — Task 1.3
-    const interval = setInterval(check, 5000);
+    // Listen for volume status events from Rust
+    let unlisten: (() => void) | undefined;
+    listen<VolumeStatusPayload>('volume_status_changed', (event) => {
+      if (event.payload.volumeId === volumeId) {
+        setOnline(event.payload.isOnline);
+      }
+    })
+      .then((fn) => {
+        unlisten = fn;
+      })
+      .catch((err) => {
+        logger.warn('Failed to listen for volume events, falling back to polling', {
+          error: String(err),
+        });
+      });
+
+    // Fallback polling at a slower rate (30s) in case events are missed
+    const interval = setInterval(check, 30000);
+
     return () => {
       cancelled = true;
       clearInterval(interval);
+      unlisten?.();
     };
   }, [volumeId]);
 
