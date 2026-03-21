@@ -230,6 +230,7 @@ const translations: Record<string, Record<string, string>> = {
     'shared.edit': 'Edit',
     'shared.create': 'Create',
     'shared.select': 'Select',
+    'shared.continueReading': 'Continue Reading',
   },
   'zh-TW': {
     'settings.title': '設定',
@@ -462,6 +463,7 @@ const translations: Record<string, Record<string, string>> = {
     'shared.edit': '編輯',
     'shared.create': '建立',
     'shared.select': '選擇',
+    'shared.continueReading': '繼續閱讀',
   },
 };
 

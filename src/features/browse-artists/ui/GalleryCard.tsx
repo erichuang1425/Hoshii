@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import type { Gallery } from '@/shared/types';
@@ -6,6 +6,8 @@ import { Badge, ProgressBar } from '@/shared/ui';
 import { toAssetUrl } from '@/shared/lib/assetUrl';
 import { t } from '@/shared/i18n';
 import { useFavoritesStore } from '@/features/favorites/model/useFavoritesStore';
+import { useTagStore } from '@/features/tag-system/model/useTagStore';
+import { TagModal } from '@/features/tag-system/ui/TagModal';
 
 interface GalleryCardProps {
   gallery: Gallery;
@@ -17,6 +19,14 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
   const [localFavorited, setLocalFavorited] = useState(gallery.favorited);
   const progress = gallery.pageCount > 0 ? gallery.lastReadPage / gallery.pageCount : 0;
   const isUnread = !gallery.lastReadAt;
+
+  const tags = useTagStore((s) => s.getGalleryTags(gallery.id));
+  const fetchGalleryTags = useTagStore((s) => s.fetchGalleryTags);
+  const [tagModalOpen, setTagModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchGalleryTags(gallery.id);
+  }, [gallery.id, fetchGalleryTags]);
 
   async function handleFavoriteClick(e: React.MouseEvent) {
     e.stopPropagation();
@@ -106,10 +116,48 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
         >
           {gallery.name}
         </span>
+        {/* Tag pills */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag.id}
+                className="rounded-full bg-[var(--bg-active)] px-1.5 py-0.5 text-[10px] text-[var(--text-secondary)]"
+              >
+                {tag.name}
+              </span>
+            ))}
+            {tags.length > 3 && (
+              <span className="text-[10px] text-[var(--text-muted)]">
+                +{tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Tag button (hover) */}
+      <button
+        onClick={(e) => { e.stopPropagation(); setTagModalOpen(true); }}
+        className="absolute bottom-8 right-2 rounded p-1 text-[var(--text-muted)] opacity-0 transition-opacity hover:text-[var(--text-primary)] group-hover:opacity-100"
+        aria-label={t('tags.manage')}
+      >
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+        </svg>
+      </button>
 
       {/* Reading progress */}
       <ProgressBar value={progress} />
+
+      {/* Tag modal */}
+      <TagModal
+        galleryId={gallery.id}
+        galleryName={gallery.name}
+        open={tagModalOpen}
+        onClose={() => setTagModalOpen(false)}
+      />
     </div>
   );
 }

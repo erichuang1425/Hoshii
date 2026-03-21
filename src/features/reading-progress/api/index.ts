@@ -1,1 +1,1 @@
-// reading-progress/api - Tauri command wrappers
+export { updateReadingProgress, getRecentGalleries } from './readingProgressApi';
