@@ -22,6 +22,16 @@
 | **Incremental Scan** | After initial scan, only process files with changed mtime. Skips unchanged files entirely. |
 | **Metadata Sidecar** | `.hoshii-meta.json` file written in a root folder, containing favorites/tags/progress. Portable across machines. |
 | **Volume UUID** | Filesystem-level identifier for a drive. Stable even if mount path changes (e.g., D: becomes E:). |
+| **Long Strip / Webtoon Mode** | A continuous vertical scroll reading mode where all gallery pages are rendered in a single virtualized column with no page breaks. Named after the webtoon reading format. Fit-to-width by default. |
+| **Infinite Slider** | A scrubbable scrollbar overlay in the reader that displays floating thumbnail previews as the user hovers or drags. Enables fast navigation by scrubbing through the entire gallery visually. |
+| **Reading Direction** | The order in which pages are navigated: LTR (left-to-right, Western), RTL (right-to-left, manga), or Vertical (top-to-bottom). Affects click zones, arrow keys, and double-page layout. |
+| **Fit Mode** | Controls how images scale within the viewport: fit-to-width, fit-to-height, original size, or fit-best (auto). |
+| **Auto-Scroll** | An assistive reading feature that automatically scrolls the reader at a configurable speed (px/s). Pauses on mouse hover, resumes on leave. |
+| **Smart Group** | An automatically detected collection of galleries with high-similarity names (e.g., `justin-1`, `justin_1`, `justin1`). Detected using regex pattern matching and Levenshtein distance fuzzy matching. |
+| **Fuzzy Matching** | String comparison using Levenshtein edit distance to detect near-identical names despite different separators, casing, or minor variations. |
+| **Levenshtein Distance** | The minimum number of single-character edits (insertions, deletions, substitutions) required to transform one string into another. Used with a configurable threshold (default ≤ 2) for Smart Group detection. |
+| **Chronological Link** | An automatically detected connection between galleries whose names contain date formats. Enables "Previous/Next" navigation in chronological order. |
+| **Timeline View** | A reading mode that plots individual images along a horizontal chronological axis based on dates parsed from filenames. Supports day/week/month zoom levels and a draggable scrubber. |
 
 ## File Extension Reference
 
