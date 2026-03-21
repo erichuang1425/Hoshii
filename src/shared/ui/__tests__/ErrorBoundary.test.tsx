@@ -9,7 +9,7 @@ beforeEach(() => {
   vi.spyOn(console, 'debug').mockImplementation(() => {});
 });
 
-function ThrowingComponent({ message }: { message: string }) {
+function ThrowingComponent({ message }: { message: string }): React.JSX.Element {
   throw new Error(message);
 }
 

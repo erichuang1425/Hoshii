@@ -1,14 +1,7 @@
 use tauri::State;
 
 use crate::db::AppDatabase;
-
-#[derive(Debug, Clone, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Tag {
-    pub id: i64,
-    pub name: String,
-    pub gallery_count: i64,
-}
+use crate::models::Tag;
 
 #[tauri::command]
 pub async fn get_all_tags(db: State<'_, AppDatabase>) -> Result<Vec<Tag>, String> {
@@ -29,7 +22,7 @@ pub async fn get_all_tags(db: State<'_, AppDatabase>) -> Result<Vec<Tag>, String
             Ok(Tag {
                 id: row.get(0)?,
                 name: row.get(1)?,
-                gallery_count: row.get(2)?,
+                gallery_count: Some(row.get(2)?),
             })
         })
         .map_err(|e| format!("Failed to query tags: {}", e))?;
@@ -69,7 +62,7 @@ mod tests {
                 Ok(Tag {
                     id: row.get(0).unwrap(),
                     name: row.get(1).unwrap(),
-                    gallery_count: row.get(2).unwrap(),
+                    gallery_count: Some(row.get(2).unwrap()),
                 })
             })
             .unwrap()
@@ -130,7 +123,7 @@ mod tests {
                 Ok(Tag {
                     id: row.get(0).unwrap(),
                     name: row.get(1).unwrap(),
-                    gallery_count: row.get(2).unwrap(),
+                    gallery_count: Some(row.get(2).unwrap()),
                 })
             })
             .unwrap()
@@ -139,8 +132,8 @@ mod tests {
 
         assert_eq!(tags.len(), 2);
         assert_eq!(tags[0].name, "action");
-        assert_eq!(tags[0].gallery_count, 2);
+        assert_eq!(tags[0].gallery_count, Some(2));
         assert_eq!(tags[1].name, "comedy");
-        assert_eq!(tags[1].gallery_count, 1);
+        assert_eq!(tags[1].gallery_count, Some(1));
     }
 }
