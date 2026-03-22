@@ -1,13 +1,13 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Spinner } from '@/shared/ui';
+import { Spinner, GalleryCard, TagModal } from '@/shared/ui';
 import { t } from '@/shared/i18n';
-import { GalleryCard } from '@/features/browse-artists/ui/GalleryCard';
+import type { Gallery, GallerySortOrder } from '@/shared/types';
 import { useBrowseArtistsStore } from '@/features/browse-artists/model/useBrowseArtistsStore';
 import { SmartGroupsPanel } from '@/features/smart-groups/ui/SmartGroupsPanel';
 import { useSettingsStore } from '@/features/settings/model/useSettingsStore';
 import { useTagStore } from '@/features/tag-system/model/useTagStore';
-import type { GallerySortOrder } from '@/shared/types';
+import { useFavoritesStore } from '@/features/favorites/model/useFavoritesStore';
 
 export function ArtistPage() {
   const { artistId } = useParams<{ artistId: string }>();
@@ -22,12 +22,25 @@ export function ArtistPage() {
   const enableSmartGrouping = useSettingsStore((s) => s.settings.enableSmartGrouping);
   const numericArtistId = Number(artistId);
 
+  // Favorites
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+
   // Tag filtering
   const activeTagFilterState = useTagStore((s) => s.activeTagFilter);
   const filteredGalleries = useTagStore((s) => s.filteredGalleries);
   const filterByTags = useTagStore((s) => s.filterByTags);
   const clearTagFilter = useTagStore((s) => s.clearTagFilter);
   const fetchBatchGalleryTags = useTagStore((s) => s.fetchBatchGalleryTags);
+  const getGalleryTags = useTagStore((s) => s.getGalleryTags);
+  const fetchGalleryTags = useTagStore((s) => s.fetchGalleryTags);
+  const addTag = useTagStore((s) => s.addTag);
+  const removeTag = useTagStore((s) => s.removeTag);
+
+  // Tag modal state
+  const [tagModalGalleryId, setTagModalGalleryId] = useState<number | null>(null);
+  const tagModalGallery = galleries.find((g) => g.id === tagModalGalleryId);
+
+  const handleCloseTagModal = useCallback(() => setTagModalGalleryId(null), []);
 
   // Batch-load tags for all galleries when they change
   useEffect(() => {
@@ -62,6 +75,17 @@ export function ArtistPage() {
       fetchGalleries(numericArtistId);
     }
   }, [gallerySort, numericArtistId, fetchGalleries]);
+
+  function renderCard(gallery: Gallery) {
+    return (
+      <GalleryCard
+        gallery={gallery}
+        tags={getGalleryTags(gallery.id)}
+        onToggleFavorite={toggleFavorite}
+        onOpenTagModal={setTagModalGalleryId}
+      />
+    );
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -144,7 +168,7 @@ export function ArtistPage() {
         <div className="flex gap-4">
           <div className="flex-1 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 content-start">
             {displayedGalleries.map((gallery) => (
-              <GalleryCard key={gallery.id} gallery={gallery} />
+              <div key={gallery.id}>{renderCard(gallery)}</div>
             ))}
           </div>
           {enableSmartGrouping && !isNaN(numericArtistId) && (
@@ -153,6 +177,20 @@ export function ArtistPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Shared tag modal for all gallery cards */}
+      {tagModalGallery && (
+        <TagModal
+          galleryId={tagModalGallery.id}
+          galleryName={tagModalGallery.name}
+          open={tagModalGalleryId !== null}
+          onClose={handleCloseTagModal}
+          tags={getGalleryTags(tagModalGallery.id)}
+          onFetchTags={fetchGalleryTags}
+          onAddTag={addTag}
+          onRemoveTag={removeTag}
+        />
       )}
     </div>
   );

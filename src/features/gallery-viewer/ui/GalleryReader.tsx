@@ -5,9 +5,8 @@ import { Spinner } from '@/shared/ui';
 import { useKeyboard } from '@/shared/hooks/useKeyboard';
 import { t } from '@/shared/i18n';
 import { toAssetUrl } from '@/shared/lib/assetUrl';
+import type { ChronologicalGroup, TimelineEntry } from '@/shared/types';
 import { useGalleryReaderStore } from '../model/useGalleryReaderStore';
-import { useChronoStore } from '@/features/chrono-linking';
-import { useReadingProgressStore } from '@/features/reading-progress/model/useReadingProgressStore';
 import { PageView } from './PageView';
 import { ThumbnailStrip } from './ThumbnailStrip';
 import { SubheadingNav } from './SubheadingNav';
@@ -20,9 +19,24 @@ import { TimelineView } from './TimelineView';
 interface GalleryReaderProps {
   galleryId: number;
   artistId?: number;
+  timeline: TimelineEntry[];
+  prevGallery: ChronologicalGroup | null;
+  nextGallery: ChronologicalGroup | null;
+  onFetchTimeline: (galleryId: number) => void;
+  onFetchGroups: (artistId: number) => void;
+  onSaveProgress: (galleryId: number, currentPage: number, totalPages: number) => Promise<void>;
 }
 
-export function GalleryReader({ galleryId, artistId }: GalleryReaderProps) {
+export function GalleryReader({
+  galleryId,
+  artistId,
+  timeline,
+  prevGallery,
+  nextGallery,
+  onFetchTimeline,
+  onFetchGroups,
+  onSaveProgress,
+}: GalleryReaderProps) {
   const navigate = useNavigate();
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const webtoonScrollRef = useRef<HTMLDivElement>(null);
@@ -56,9 +70,6 @@ export function GalleryReader({ galleryId, artistId }: GalleryReaderProps) {
   const setAutoScroll = useGalleryReaderStore((s) => s.setAutoScroll);
   const setAutoScrollSpeed = useGalleryReaderStore((s) => s.setAutoScrollSpeed);
 
-  const { timeline, fetchTimeline, fetchGroups, getPrevGallery, getNextGallery } = useChronoStore();
-
-  const saveProgress = useReadingProgressStore((s) => s.saveProgress);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedPageRef = useRef<number>(-1);
 
@@ -68,35 +79,35 @@ export function GalleryReader({ galleryId, artistId }: GalleryReaderProps) {
 
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      saveProgress(galleryId, currentPage, totalPages);
+      onSaveProgress(galleryId, currentPage, totalPages);
       lastSavedPageRef.current = currentPage;
     }, 3000);
 
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [currentPage, totalPages, galleryId, saveProgress]);
+  }, [currentPage, totalPages, galleryId, onSaveProgress]);
 
   // Save on unmount
   useEffect(() => {
     return () => {
       const state = useGalleryReaderStore.getState();
       if (state.totalPages > 0) {
-        saveProgress(galleryId, state.currentPage, state.totalPages);
+        onSaveProgress(galleryId, state.currentPage, state.totalPages);
       }
     };
-  }, [galleryId, saveProgress]);
+  }, [galleryId, onSaveProgress]);
 
   useEffect(() => {
     loadGallery(galleryId);
-    fetchTimeline(galleryId);
-  }, [galleryId, loadGallery, fetchTimeline]);
+    onFetchTimeline(galleryId);
+  }, [galleryId, loadGallery, onFetchTimeline]);
 
   useEffect(() => {
     if (artistId !== undefined) {
-      fetchGroups(artistId);
+      onFetchGroups(artistId);
     }
-  }, [artistId, fetchGroups]);
+  }, [artistId, onFetchGroups]);
 
   // Auto-hide header after 2s
   const resetHideTimer = useCallback(() => {
@@ -137,9 +148,6 @@ export function GalleryReader({ galleryId, artistId }: GalleryReaderProps) {
     { key: '1', action: () => setReadingMode('single') },
     { key: '2', action: () => setReadingMode('double_page') },
   ]);
-
-  const prevGallery = galleryId ? getPrevGallery(galleryId) : null;
-  const nextGallery = galleryId ? getNextGallery(galleryId) : null;
 
   const currentMedia = media[currentPage];
 

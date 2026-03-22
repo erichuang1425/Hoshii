@@ -1,9 +1,12 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { t } from '@/shared/i18n';
-import { SearchInput, Button } from '@/shared/ui';
+import { SearchInput, Button, GalleryCard, TagModal } from '@/shared/ui';
+import type { Gallery } from '@/shared/types';
 import { SearchResults } from '@/features/search/ui/SearchResults';
 import { useSearchStore } from '@/features/search/model/useSearchStore';
+import { useFavoritesStore } from '@/features/favorites/model/useFavoritesStore';
+import { useTagStore } from '@/features/tag-system/model/useTagStore';
 
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -14,12 +17,22 @@ export function SearchPage() {
   const search = useSearchStore((s) => s.search);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const getGalleryTags = useTagStore((s) => s.getGalleryTags);
+  const fetchGalleryTags = useTagStore((s) => s.fetchGalleryTags);
+  const addTag = useTagStore((s) => s.addTag);
+  const removeTag = useTagStore((s) => s.removeTag);
+
+  const [tagModalGalleryId, setTagModalGalleryId] = useState<number | null>(null);
+  const results = useSearchStore((s) => s.results);
+  const tagModalGallery = results.find((g) => g.id === tagModalGalleryId);
+
+  const handleCloseTagModal = useCallback(() => setTagModalGalleryId(null), []);
+
   // Sync URL param → store on mount
   useEffect(() => {
     const q = searchParams.get('q') ?? '';
     if (q) {
-      // Use search() directly which also sets the query in the store.
-      // Calling setQuery() here would trigger a redundant debounced search.
       search(q);
     }
     inputRef.current?.focus();
@@ -36,6 +49,17 @@ export function SearchPage() {
     setQuery('');
     setSearchParams({}, { replace: true });
     inputRef.current?.focus();
+  }
+
+  function renderCard(gallery: Gallery) {
+    return (
+      <GalleryCard
+        gallery={gallery}
+        tags={getGalleryTags(gallery.id)}
+        onToggleFavorite={toggleFavorite}
+        onOpenTagModal={setTagModalGalleryId}
+      />
+    );
   }
 
   return (
@@ -88,7 +112,20 @@ export function SearchPage() {
       )}
 
       {/* Results */}
-      <SearchResults />
+      <SearchResults renderCard={renderCard} />
+
+      {tagModalGallery && (
+        <TagModal
+          galleryId={tagModalGallery.id}
+          galleryName={tagModalGallery.name}
+          open={tagModalGalleryId !== null}
+          onClose={handleCloseTagModal}
+          tags={getGalleryTags(tagModalGallery.id)}
+          onFetchTags={fetchGalleryTags}
+          onAddTag={addTag}
+          onRemoveTag={removeTag}
+        />
+      )}
     </div>
   );
 }
