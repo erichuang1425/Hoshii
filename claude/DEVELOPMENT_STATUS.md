@@ -349,13 +349,33 @@ See [BUG_FIX_GUIDE.md](BUG_FIX_GUIDE.md) for detailed educational writeup of eac
 
 All planned phases and hardening tasks are complete. Remaining items for future consideration:
 
-| Item | Priority | Description |
-|------|----------|-------------|
-| Mobile/remote access | MEDIUM | See [MOBILE_STRATEGY.md](MOBILE_STRATEGY.md) for phone access architecture with 2TB desktop data |
-| Cross-feature import cleanup | MEDIUM | `GalleryCard` imports from `favorites/` and `tag-system/`; `GalleryReader` from `chrono-linking/` and `reading-progress/` — lift to `shared/` or pass via props |
-| `long_strip` reading mode | MEDIUM | Referenced in settings but not implemented in `GalleryReader.tsx` — implement or remove |
-| EXIF date extraction | LOW | Currently only parses dates from filenames; could extract EXIF data for more accurate chronological linking |
-| Connection pooling | LOW | Replace `Mutex<Connection>` with a connection pool (`r2d2-sqlite`) for better concurrency |
-| E2E tests | LOW | Add Playwright or Cypress integration tests for full user flows |
-| Accessibility audit | LOW | Screen reader testing, keyboard-only navigation, ARIA labels |
-| Performance profiling | LOW | Profile large collections (10k+ galleries) for bottlenecks |
+| # | Item | Priority | Description |
+|---|------|----------|-------------|
+| 1 | Cross-feature import cleanup | **HIGH** | 7 violations across 4 files — see details below. Violates CLAUDE.md rule 5. |
+| 2 | EXIF date extraction | MEDIUM | `chrono_linking.rs` only parses dates from filenames. Add EXIF extraction for JPEG/TIFF for more accurate chronological linking. |
+| 3 | Connection pooling | MEDIUM | Replace `Mutex<Connection>` with `r2d2-sqlite` connection pool for better concurrent access (documented debt in `db/mod.rs`). |
+| 4 | E2E integration tests | MEDIUM | Add Playwright tests for critical flows: add root, scan, browse, read gallery, favorite, tag, search. |
+| 5 | Accessibility audit | MEDIUM | Screen reader support, keyboard-only navigation, ARIA attributes, focus management in gallery reader and modals. |
+| 6 | Performance profiling | LOW | Test with 10k+ galleries to identify bottlenecks in virtual scrolling, thumbnail loading, and DB queries. |
+| 7 | `long_strip` reading mode | LOW | Referenced in settings but not implemented in `GalleryReader.tsx`. Either implement or remove from settings. |
+| 8 | Mobile/remote access | LOW | See [MOBILE_STRATEGY.md](MOBILE_STRATEGY.md) for comprehensive comparison of all phone access approaches. |
+
+### Cross-Feature Import Violations (Detail)
+
+7 violations across 4 files. All use `@/features/` alias pattern.
+
+| Source File | Line | Imports From | What |
+|-------------|------|-------------|------|
+| `browse-artists/ui/GalleryCard.tsx` | 8 | `favorites/` | `useFavoritesStore` (store) |
+| `browse-artists/ui/GalleryCard.tsx` | 9 | `tag-system/` | `useTagStore` (store) |
+| `browse-artists/ui/GalleryCard.tsx` | 10 | `tag-system/` | `TagModal` (component) |
+| `favorites/ui/FavoritesGrid.tsx` | 3 | `browse-artists/` | `GalleryCard` (component) |
+| `search/ui/SearchResults.tsx` | 3 | `browse-artists/` | `GalleryCard` (component) |
+| `gallery-viewer/ui/GalleryReader.tsx` | 9 | `chrono-linking/` | `useChronoStore` (store) |
+| `gallery-viewer/ui/GalleryReader.tsx` | 10 | `reading-progress/` | `useReadingProgressStore` (store) |
+
+**Fix strategy:**
+1. **GalleryCard** → Move to `shared/ui/` (it's used by 3 features: browse-artists, favorites, search)
+2. **GalleryCard's favorites/tag imports** → Pass `isFavorited`, `onToggleFavorite`, `tags`, `onOpenTagModal` as props from parent pages
+3. **TagModal** → Move to `shared/ui/` (used across features)
+4. **GalleryReader's chrono/reading-progress imports** → Pass `chronoData` and `onProgressSave` as props from `GalleryPage.tsx`
