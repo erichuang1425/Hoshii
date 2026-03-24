@@ -36,7 +36,7 @@ export function GalleryCard({
     if (!onToggleFavorite) return;
     const newFavorited = !localFavorited;
     setLocalFavorited(newFavorited);
-    await onToggleFavorite({ ...gallery, favorited: localFavorited });
+    await onToggleFavorite({ ...gallery, favorited: newFavorited });
   }
 
   return (

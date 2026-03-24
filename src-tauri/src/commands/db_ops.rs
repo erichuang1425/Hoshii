@@ -86,37 +86,55 @@ pub fn replace_gallery_media(
     gallery_id: i64,
     media_files: &[MediaFileScanData],
 ) -> Result<(), String> {
-    // Remove existing media for this gallery
-    conn.execute(
-        "DELETE FROM gallery_media WHERE gallery_id = ?1",
-        params![gallery_id],
-    )
-    .map_err(|e| format!("Failed to delete old media: {}", e))?;
+    // Wrap in transaction to prevent partial data on failure
+    conn.execute("BEGIN", [])
+        .map_err(|e| format!("Failed to begin transaction: {}", e))?;
 
-    let mut stmt = conn
-        .prepare(
-            "INSERT INTO gallery_media \
-             (gallery_id, filename, path, relative_path, sort_order, group_name, media_type, file_size, mtime) \
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+    let result = (|| -> Result<(), String> {
+        // Remove existing media for this gallery
+        conn.execute(
+            "DELETE FROM gallery_media WHERE gallery_id = ?1",
+            params![gallery_id],
         )
-        .map_err(|e| format!("Failed to prepare insert statement: {}", e))?;
+        .map_err(|e| format!("Failed to delete old media: {}", e))?;
 
-    for media in media_files {
-        stmt.execute(params![
-            gallery_id,
-            media.filename,
-            media.path.to_string_lossy().to_string(),
-            media.relative_path,
-            media.sort_order,
-            media.group_name,
-            media.media_type.as_str(),
-            media.file_size as i64,
-            media.mtime,
-        ])
-        .map_err(|e| format!("Failed to insert media: {}", e))?;
+        let mut stmt = conn
+            .prepare(
+                "INSERT INTO gallery_media \
+                 (gallery_id, filename, path, relative_path, sort_order, group_name, media_type, file_size, mtime) \
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            )
+            .map_err(|e| format!("Failed to prepare insert statement: {}", e))?;
+
+        for media in media_files {
+            stmt.execute(params![
+                gallery_id,
+                media.filename,
+                media.path.to_string_lossy().to_string(),
+                media.relative_path,
+                media.sort_order,
+                media.group_name,
+                media.media_type.as_str(),
+                media.file_size as i64,
+                media.mtime,
+            ])
+            .map_err(|e| format!("Failed to insert media: {}", e))?;
+        }
+
+        Ok(())
+    })();
+
+    match result {
+        Ok(()) => {
+            conn.execute("COMMIT", [])
+                .map_err(|e| format!("Failed to commit transaction: {}", e))?;
+            Ok(())
+        }
+        Err(e) => {
+            let _ = conn.execute("ROLLBACK", []);
+            Err(e)
+        }
     }
-
-    Ok(())
 }
 
 /// Insert unorganized files for an artist (replaces existing).
