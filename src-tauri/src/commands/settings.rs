@@ -6,54 +6,7 @@ use crate::models::AppSettings;
 
 #[tauri::command]
 pub async fn get_settings(db: State<'_, AppDatabase>) -> Result<AppSettings, String> {
-    let conn = db.conn.lock().map_err(|e| format!("DB lock error: {}", e))?;
-
-    let mut stmt = conn
-        .prepare("SELECT key, value FROM app_settings")
-        .map_err(|e| format!("Failed to prepare query: {}", e))?;
-
-    let rows: Vec<(String, String)> = stmt
-        .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
-        .map_err(|e| format!("Failed to query settings: {}", e))?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| format!("Failed to read settings row: {}", e))?;
-
-    let mut settings = AppSettings::default();
-
-    for (key, value) in rows {
-        match key.as_str() {
-            "theme" => settings.theme = value,
-            "language" => settings.language = value,
-            "default_reading_mode" => settings.default_reading_mode = value,
-            "auto_play_animated" => settings.auto_play_animated = value == "true",
-            "auto_play_loop_threshold" => {
-                if let Ok(v) = value.parse() { settings.auto_play_loop_threshold = v; }
-            }
-            "thumbnail_size" => settings.thumbnail_size = value,
-            "show_media_badges" => settings.show_media_badges = value == "true",
-            "video_player_volume" => {
-                if let Ok(v) = value.parse() { settings.video_player_volume = v; }
-            }
-            "gallery_sort_order" => settings.gallery_sort_order = value,
-            "thumbnail_cache_max_mb" => {
-                if let Ok(v) = value.parse() { settings.thumbnail_cache_max_mb = v; }
-            }
-            "auto_export_metadata" => settings.auto_export_metadata = value == "true",
-            "default_reading_direction" => settings.default_reading_direction = value,
-            "default_fit_mode" => settings.default_fit_mode = value,
-            "auto_scroll_speed" => {
-                if let Ok(v) = value.parse() { settings.auto_scroll_speed = v; }
-            }
-            "smart_grouping_threshold" => {
-                if let Ok(v) = value.parse() { settings.smart_grouping_threshold = v; }
-            }
-            "enable_smart_grouping" => settings.enable_smart_grouping = value == "true",
-            "enable_chronological_linking" => settings.enable_chronological_linking = value == "true",
-            _ => {}
-        }
-    }
-
-    Ok(settings)
+    get_settings_inner(&db)
 }
 
 #[tauri::command]

@@ -53,7 +53,7 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
       set((s) => {
         const newToggling = new Set(s.toggling);
         newToggling.delete(gallery.id);
-        return { toggling: newToggling };
+        return { toggling: newToggling, error: null };
       });
       return result;
     } catch (err) {

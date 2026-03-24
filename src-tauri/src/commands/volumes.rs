@@ -22,10 +22,18 @@ pub async fn detect_volumes(db: State<'_, AppDatabase>) -> Result<Vec<Volume>, S
         format!("Database lock error: {}", e)
     })?;
 
+    // Wrap in transaction to prevent concurrent reads from seeing inconsistent state
+    conn.execute("BEGIN IMMEDIATE", [])
+        .map_err(|e| {
+            log::error!("Failed to begin transaction: {}", e);
+            format!("Database error: {}", e)
+        })?;
+
     // Mark all volumes offline first, then update detected ones
     conn.execute("UPDATE volumes SET is_online = FALSE", [])
         .map_err(|e| {
             log::error!("Failed to mark volumes offline: {}", e);
+            let _ = conn.execute("ROLLBACK", []);
             format!("Database error: {}", e)
         })?;
 
@@ -50,9 +58,16 @@ pub async fn detect_volumes(db: State<'_, AppDatabase>) -> Result<Vec<Volume>, S
         )
         .map_err(|e| {
             log::error!("Failed to upsert volume {}: {}", vol.uuid, e);
+            let _ = conn.execute("ROLLBACK", []);
             format!("Database error: {}", e)
         })?;
     }
+
+    conn.execute("COMMIT", [])
+        .map_err(|e| {
+            log::error!("Failed to commit transaction: {}", e);
+            format!("Database error: {}", e)
+        })?;
 
     log::info!("detect_volumes: upserted {} volumes", detected.len());
 
@@ -96,10 +111,19 @@ pub async fn refresh_volume_status(
     // Snapshot current online status before updating
     let old_volumes = get_all_volumes(&conn)?;
 
+    // Wrap status update in a transaction to prevent concurrent reads
+    // from seeing an inconsistent state where all volumes are offline
+    conn.execute("BEGIN IMMEDIATE", [])
+        .map_err(|e| {
+            log::error!("Failed to begin transaction: {}", e);
+            format!("Database error: {}", e)
+        })?;
+
     // Mark all offline first
     conn.execute("UPDATE volumes SET is_online = FALSE", [])
         .map_err(|e| {
             log::error!("Failed to mark volumes offline: {}", e);
+            let _ = conn.execute("ROLLBACK", []);
             format!("Database error: {}", e)
         })?;
 
@@ -120,9 +144,16 @@ pub async fn refresh_volume_status(
         )
         .map_err(|e| {
             log::error!("Failed to refresh volume {}: {}", vol.uuid, e);
+            let _ = conn.execute("ROLLBACK", []);
             format!("Database error: {}", e)
         })?;
     }
+
+    conn.execute("COMMIT", [])
+        .map_err(|e| {
+            log::error!("Failed to commit transaction: {}", e);
+            format!("Database error: {}", e)
+        })?;
 
     log::info!("refresh_volume_status: refreshed against {} mounted volumes", detected.len());
 
