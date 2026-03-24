@@ -62,6 +62,7 @@ export interface Artist {
   name: string;
   path: string;
   galleryCount: number;
+  coverPath: string | null;
 }
 
 export interface Gallery {
@@ -124,7 +125,17 @@ export interface MediaGroup {
   count: number;
 }
 
-export type ReadingMode = 'single' | 'vertical_scroll' | 'double_page' | 'thumbnail_grid';
+export type ReadingMode = 'single' | 'vertical_scroll' | 'double_page' | 'thumbnail_grid' | 'long_strip';
+
+export type ReadingDirection = 'ltr' | 'rtl' | 'vertical';
+
+export type FitMode = 'fit_width' | 'fit_height' | 'original' | 'fit_best';
+
+export interface AutoScrollConfig {
+  enabled: boolean;
+  speedPxPerSecond: number;       // configurable scroll speed (default: 50)
+  pauseOnHover: boolean;          // pause when mouse enters content area
+}
 
 export interface ReadingState {
   galleryId: number;
@@ -132,6 +143,9 @@ export interface ReadingState {
   totalPages: number;
   currentGroup: string | null;
   readingMode: ReadingMode;
+  readingDirection: ReadingDirection;
+  fitMode: FitMode;
+  autoScroll: AutoScrollConfig;
   zoomLevel: number;
 }
 
@@ -201,6 +215,57 @@ export interface AppSettings {
   gallerySortOrder: GallerySortOrder;
   thumbnailCacheMaxMb: number; // default 2048 (2GB)
   autoExportMetadata: boolean; // write .hoshii-meta.json on close
+  defaultReadingDirection: ReadingDirection;   // default 'ltr'
+  defaultFitMode: FitMode;                    // default 'fit_best'
+  autoScrollSpeed: number;                    // default 50 (px/s)
+  smartGroupingThreshold: number;             // Levenshtein threshold, default 2
+  enableSmartGrouping: boolean;               // default true
+  enableChronologicalLinking: boolean;        // default true
+}
+```
+
+## Smart Grouping & Timeline Types
+
+```typescript
+// ═══════════ SMART COLLECTION LINKING ═══════════
+
+export interface SmartGroup {
+  id: number;
+  artistId: number;
+  canonicalName: string;          // display name for the group (e.g., "justin")
+  members: SmartGroupMember[];
+}
+
+export interface SmartGroupMember {
+  galleryId: number;
+  galleryName: string;            // original folder name
+  confidence: number;             // 1.0 = exact base match, <1.0 = fuzzy (Levenshtein)
+}
+
+// ═══════════ CHRONOLOGICAL SMART LINKING ═══════════
+
+export interface ChronologicalLink {
+  galleryId: number;
+  parsedDate: string;             // ISO date string (YYYY-MM-DD)
+  previousGalleryId: number | null;
+  nextGalleryId: number | null;
+  previousLabel: string | null;   // display label, e.g., "Mar 14"
+  nextLabel: string | null;
+}
+
+// ═══════════ CUSTOM TIMELINE NAVIGATION ═══════════
+
+export interface TimelineEntry {
+  date: string;                   // ISO date string
+  mediaEntryIds: number[];        // media entries for this date
+  thumbnailPath: string | null;   // representative thumbnail
+  count: number;                  // number of images on this date
+}
+
+export interface TimelineRange {
+  start: string;                  // ISO date
+  end: string;                    // ISO date
+  zoomLevel: 'day' | 'week' | 'month';
 }
 ```
 
@@ -250,8 +315,20 @@ export interface AppSettings {
 'search_by_tags'         → ({ tags: string[] })                        → Gallery[]
 
 // ═══════════ METADATA EXPORT ═══════════
-'export_metadata'        → ({ rootId: number })                        → string  // path to exported JSON
-'import_metadata'        → ({ rootId: number, filePath: string })      → { imported: number, skipped: number }
+'export_metadata'        → ({ galleryId: number })                     → string  // path to .hoshii-meta.json sidecar
+'import_metadata'        → ({ galleryId: number })                     → void    // imports from .hoshii-meta.json sidecar
+
+// ═══════════ SMART GROUPING ═══════════
+'get_smart_groups'           → ({ artistId: number })                    → SmartGroup[]
+'merge_smart_group'          → ({ groupId: number, galleryId: number })  → SmartGroup    // manually add gallery to group
+'unlink_smart_group'         → ({ groupId: number, galleryId: number })  → void          // remove gallery from group
+
+// ═══════════ CHRONOLOGICAL LINKING ═══════════
+'get_chronological_neighbors'→ ({ galleryId: number })                   → ChronologicalLink | null
+
+// ═══════════ TIMELINE ═══════════
+'get_timeline_data'          → ({ galleryId: number })                   → TimelineEntry[]
+'get_timeline_range'         → ({ galleryId: number, start: string, end: string }) → MediaEntry[]
 
 // ═══════════ SETTINGS ═══════════
 'get_settings'           → ()                                          → AppSettings

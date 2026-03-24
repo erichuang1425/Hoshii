@@ -128,4 +128,4 @@ pub fn classify_extension(ext: &str) -> Option<&'static str> {
     if AVIF_EXTS.contains(&ext) { return Some("avif_static"); } // refined later by container inspection
     None
 }
-```Written with [StackEdit](https://stackedit.io/).
+```
