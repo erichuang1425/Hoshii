@@ -518,11 +518,20 @@ Optionally write a `.hoshii-meta.json` in each root folder:
 
 ---
 
-## 12. Next Steps
+## 12. Implementation Status
 
-1. Bootstrap Tauri v2 + React + TS project with this directory structure
-2. Implement Rust volume tracker + SQLite schema with WAL mode
-3. Implement Rust scanner with incremental scan support
-4. Build core shell (layouts, routing, dark theme, asset protocol scope registration)
-5. Gallery grid with virtual scrolling + thumbnail lazy loading
-6. Gallery reader with single page + vertical scroll modes + subheading nav
+### Completed
+1. ~~Bootstrap Tauri v2 + React + TS project with this directory structure~~ ✅ (Task 1.1)
+2. ~~Implement Rust volume tracker + SQLite schema with WAL mode~~ ✅ (Task 1.2)
+
+### Next Steps (in priority order)
+3. **Task 1.3: Shared UI Components** — Button, Modal, Spinner, Badge, Skeleton, Toast, OfflineOverlay, DriveStatusDot, MediaBadge, ProgressBar + hooks (useIntersectionObserver, useDriveStatus)
+4. **Task 2.1: Rust Scanner** — Full + incremental scan, natural sort, media detection (can start in parallel with 1.3)
+5. **Task 2.2: Rust Thumbnail Generator** — Image resize, LRU disk cache, volume-aware paths (can parallel with 2.1)
+6. **Task 2.4-2.6: Frontend features** — Browse Roots, Browse Artists, Gallery Viewer UI (depend on 1.3)
+7. Build core shell (layouts, routing, dark theme, asset protocol scope registration)
+
+### Current Codebase State
+- **Rust backend:** main.rs with Tauri builder, 3 volume commands registered, db/mod.rs with WAL init, full schema.sql, all model structs (Volume, RootFolder, Artist, Gallery, MediaEntry, etc.), volume_tracker service with platform-specific UUID detection
+- **Frontend:** React app scaffolded with routes, all feature slice stubs (10 features × 3 subdirs), shared types matching TYPES_REFERENCE.md, logger, assetUrl helper, invoke wrapper, i18n skeleton, MainLayout shell, page stubs
+- **Tests:** 8 Rust tests passing (schema creation, WAL mode, volume tracking, UUID extraction)
