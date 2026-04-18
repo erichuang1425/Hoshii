@@ -221,7 +221,7 @@ export function GalleryReader({
     );
   }
 
-  if (readingMode === 'vertical_scroll') {
+  if (readingMode === 'vertical_scroll' || readingMode === 'long_strip') {
     return (
       <div className="relative flex h-full w-full flex-col bg-[var(--reader-bg)]" onMouseMove={resetHideTimer}>
         <ReaderHeader
