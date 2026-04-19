@@ -10,10 +10,11 @@ export function Skeleton({ className, width, height }: SkeletonProps) {
   return (
     <div
       className={clsx(
-        'animate-pulse rounded bg-[var(--bg-hover)]',
+        'skeleton-shimmer rounded',
         className,
       )}
       style={{ width, height }}
+      aria-hidden="true"
     />
   );
 }

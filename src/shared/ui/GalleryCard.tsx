@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import type { Gallery, Tag } from '@/shared/types';
@@ -14,7 +14,7 @@ interface GalleryCardProps {
   tagModalSlot?: React.ReactNode;
 }
 
-export function GalleryCard({
+function GalleryCardInner({
   gallery,
   tags = [],
   onToggleFavorite,
@@ -51,11 +51,13 @@ export function GalleryCard({
         }
       }}
       className={clsx(
-        'focus-ring group relative flex flex-col overflow-hidden',
+        'focus-ring group relative flex flex-col overflow-hidden will-change-transform',
         'rounded-[var(--card-radius)] border border-[var(--border)]',
         'bg-[var(--bg-secondary)] shadow-[var(--card-shadow)]',
-        'transition-all duration-[var(--duration-fast)] ease-[var(--ease-smooth)]',
+        'transition-[transform,box-shadow,border-color,background-color] duration-[var(--duration-normal)] ease-[var(--ease-smooth)]',
         'cursor-pointer hover:border-[var(--border-hover)] hover:bg-[var(--bg-hover)]',
+        'hover:scale-[1.03] hover:shadow-lg hover:z-10 focus-visible:scale-[1.03]',
+        'motion-reduce:transform-none motion-reduce:hover:scale-100',
       )}
     >
       {/* Cover image */}
@@ -169,3 +171,5 @@ export function GalleryCard({
     </div>
   );
 }
+
+export const GalleryCard = memo(GalleryCardInner);
