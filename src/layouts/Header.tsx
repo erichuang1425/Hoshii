@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { t } from '@/shared/i18n';
@@ -69,6 +69,29 @@ export function Header() {
     [navigate],
   );
 
+  // Global search-focus shortcut: `/` or Ctrl/Cmd+F.
+  // Skip if focus is already in an editable element so we don't hijack typing.
+  useEffect(() => {
+    function handleGlobalKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      const inEditable =
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable;
+
+      const isSlash = e.key === '/' && !e.ctrlKey && !e.metaKey && !inEditable;
+      const isFind = (e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F');
+
+      if (isSlash || isFind) {
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+    }
+    window.addEventListener('keydown', handleGlobalKey);
+    return () => window.removeEventListener('keydown', handleGlobalKey);
+  }, []);
+
   return (
     <header
       className="flex flex-shrink-0 items-center gap-3 border-b px-3"
@@ -82,7 +105,7 @@ export function Header() {
       <button
         onClick={toggleSidebar}
         className={clsx(
-          'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded',
+          'focus-ring flex h-8 w-8 flex-shrink-0 items-center justify-center rounded',
           'transition-colors duration-[var(--duration-fast)]',
           'hover:bg-[var(--bg-hover)]',
         )}
@@ -95,7 +118,7 @@ export function Header() {
       {/* App title */}
       <button
         onClick={() => navigate('/')}
-        className="flex-shrink-0 text-base font-bold transition-colors duration-[var(--duration-fast)] hover:opacity-80"
+        className="focus-ring flex-shrink-0 rounded px-1 text-base font-bold transition-colors duration-[var(--duration-fast)] hover:opacity-80"
         style={{ color: 'var(--accent)' }}
       >
         {t('header.title')}
@@ -112,6 +135,7 @@ export function Header() {
           type="search"
           placeholder={t('header.searchPlaceholder')}
           onKeyDown={handleSearchKeyDown}
+          aria-label={t('header.searchPlaceholder')}
           className={clsx(
             'w-full rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] py-1.5 pl-8 pr-3',
             'text-sm placeholder:text-[var(--text-muted)] text-[var(--text-primary)]',
@@ -125,7 +149,7 @@ export function Header() {
       <button
         onClick={() => navigate('/favorites')}
         className={clsx(
-          'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded',
+          'focus-ring flex h-8 w-8 flex-shrink-0 items-center justify-center rounded',
           'transition-colors duration-[var(--duration-fast)]',
           'hover:bg-[var(--bg-hover)]',
         )}
@@ -139,7 +163,7 @@ export function Header() {
       <button
         onClick={() => navigate('/settings')}
         className={clsx(
-          'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded',
+          'focus-ring flex h-8 w-8 flex-shrink-0 items-center justify-center rounded',
           'transition-colors duration-[var(--duration-fast)]',
           'hover:bg-[var(--bg-hover)]',
         )}

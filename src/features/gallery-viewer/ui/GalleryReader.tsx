@@ -5,7 +5,7 @@ import { Spinner } from '@/shared/ui';
 import { useKeyboard } from '@/shared/hooks/useKeyboard';
 import { t } from '@/shared/i18n';
 import { toAssetUrl } from '@/shared/lib/assetUrl';
-import type { ChronologicalGroup, TimelineEntry } from '@/shared/types';
+import type { ChronologicalGroup, TimelineEntry, ReadingDirection } from '@/shared/types';
 import { useGalleryReaderStore } from '../model/useGalleryReaderStore';
 import { PageView } from './PageView';
 import { ThumbnailStrip } from './ThumbnailStrip';
@@ -134,10 +134,34 @@ export function GalleryReader({
     else prevPage();
   }, [readingDirection, nextPage, prevPage]);
 
+  const cycleReadingDirection = useCallback(() => {
+    const order: ReadingDirection[] = ['ltr', 'rtl', 'vertical'];
+    const idx = order.indexOf(readingDirection);
+    setReadingDirection(order[(idx + 1) % order.length]);
+  }, [readingDirection, setReadingDirection]);
+
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  }, []);
+
+  const goToPrevGallery = useCallback(() => {
+    if (prevGallery) navigate(`/gallery/${prevGallery.galleryId}`);
+  }, [prevGallery, navigate]);
+
+  const goToNextGallery = useCallback(() => {
+    if (nextGallery) navigate(`/gallery/${nextGallery.galleryId}`);
+  }, [nextGallery, navigate]);
+
   useKeyboard([
     { key: 'Escape', action: () => navigate(-1) },
     { key: 'ArrowRight', action: pageForward },
     { key: 'ArrowLeft', action: pageBack },
+    { key: 'ArrowRight', shift: true, action: goToNextGallery },
+    { key: 'ArrowLeft', shift: true, action: goToPrevGallery },
     { key: 'd', action: pageForward },
     { key: 'a', action: pageBack },
     { key: ' ', action: nextPage },
@@ -145,8 +169,14 @@ export function GalleryReader({
     { key: 'End', action: goToLast },
     { key: 'g', action: () => setReadingMode('thumbnail_grid') },
     { key: 'v', action: () => setReadingMode('vertical_scroll') },
+    { key: 'w', action: () => setReadingMode('long_strip') },
     { key: '1', action: () => setReadingMode('single') },
     { key: '2', action: () => setReadingMode('double_page') },
+    { key: 'r', action: cycleReadingDirection },
+    { key: 's', action: () => setAutoScroll(!autoScroll) },
+    { key: '[', action: () => setAutoScrollSpeed(Math.max(5, autoScrollSpeed - 10)) },
+    { key: ']', action: () => setAutoScrollSpeed(Math.min(200, autoScrollSpeed + 10)) },
+    { key: 'f', action: toggleFullscreen },
   ]);
 
   const currentMedia = media[currentPage];
@@ -179,7 +209,7 @@ export function GalleryReader({
         <p className="text-sm text-[var(--error)]">{error}</p>
         <button
           onClick={() => navigate(-1)}
-          className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          className="focus-ring rounded px-2 py-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
         >
           {t('shared.retry')}
         </button>
@@ -202,8 +232,10 @@ export function GalleryReader({
               <button
                 key={entry.id}
                 onClick={() => { setCurrentPage(i); setReadingMode('single'); }}
+                aria-label={`Page ${i + 1}`}
+                aria-current={i === currentPage ? 'true' : undefined}
                 className={clsx(
-                  'overflow-hidden rounded border-2 transition-colors',
+                  'focus-ring overflow-hidden rounded border-2 transition-colors',
                   i === currentPage ? 'border-[var(--accent)]' : 'border-transparent hover:border-[var(--border-hover)]',
                 )}
               >
@@ -361,15 +393,18 @@ function ReaderHeader({ visible, currentPage, totalPages, onBack }: ReaderHeader
   return (
     <div
       className={clsx(
-        'flex items-center justify-between px-4 py-2',
+        'relative flex items-center justify-between px-4 py-2',
         'bg-[var(--bg-primary)]/80 backdrop-blur-sm',
         'transition-opacity duration-[var(--duration-normal)]',
         visible ? 'opacity-100' : 'opacity-0 pointer-events-none',
       )}
+      style={{ WebkitBackdropFilter: 'blur(4px)', zIndex: 'var(--z-reader)' }}
+      aria-hidden={!visible}
     >
       <button
         onClick={onBack}
-        className="flex items-center gap-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+        aria-label={t('galleryViewer.back')}
+        className="focus-ring flex items-center gap-1 rounded px-1 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -397,7 +432,7 @@ function ChronoNav({ prev, next }: ChronoNavProps) {
       {prev ? (
         <button
           onClick={() => navigate(`/gallery/${prev.galleryId}`)}
-          className="flex items-center gap-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          className="focus-ring flex items-center gap-1 rounded px-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           title={prev.galleryName}
         >
           <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -412,7 +447,7 @@ function ChronoNav({ prev, next }: ChronoNavProps) {
       {next ? (
         <button
           onClick={() => navigate(`/gallery/${next.galleryId}`)}
-          className="flex items-center gap-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          className="focus-ring flex items-center gap-1 rounded px-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           title={next.galleryName}
         >
           <span>{next.date}</span>

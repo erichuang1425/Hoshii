@@ -45,7 +45,7 @@ export function HomePage() {
                 <button
                   key={gallery.id}
                   onClick={() => navigate(`/gallery/${gallery.id}`)}
-                  className="group flex flex-col overflow-hidden rounded-[var(--card-radius)] border border-[var(--border)] bg-[var(--bg-secondary)] text-left transition-all hover:border-[var(--border-hover)]"
+                  className="focus-ring group flex flex-col overflow-hidden rounded-[var(--card-radius)] border border-[var(--border)] bg-[var(--bg-secondary)] text-left transition-all hover:border-[var(--border-hover)]"
                 >
                   <div className="relative overflow-hidden bg-[var(--bg-elevated)]" style={{ aspectRatio: 'var(--thumb-ratio)' }}>
                     {gallery.coverPath ? (
