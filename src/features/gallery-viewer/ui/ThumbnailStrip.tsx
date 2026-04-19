@@ -11,7 +11,8 @@ interface ThumbnailStripProps {
   onSelect: (index: number) => void;
 }
 
-const THUMB_WIDTH = 64;
+const THUMB_WIDTH = 48;
+const THUMB_HEIGHT = 64;
 const THUMB_GAP = 4;
 
 export function ThumbnailStrip({ media, currentIndex, onSelect }: ThumbnailStripProps) {
@@ -57,7 +58,7 @@ export function ThumbnailStrip({ media, currentIndex, onSelect }: ThumbnailStrip
               style={{
                 left: item.start,
                 width: THUMB_WIDTH,
-                height: THUMB_WIDTH * (4 / 3),
+                height: THUMB_HEIGHT,
               }}
             >
               <img

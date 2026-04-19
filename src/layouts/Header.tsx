@@ -105,7 +105,7 @@ export function Header() {
       <div className="flex-1" />
 
       {/* Search input */}
-      <div className="relative flex max-w-sm flex-1 items-center">
+      <div className="relative flex min-w-0 max-w-sm flex-1 items-center">
         <SearchIcon />
         <input
           ref={searchRef}
