@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import type { Artist } from '@/shared/types';
@@ -9,7 +10,7 @@ interface ArtistCardProps {
   artist: Artist;
 }
 
-export function ArtistCard({ artist }: ArtistCardProps) {
+function ArtistCardInner({ artist }: ArtistCardProps) {
   const navigate = useNavigate();
 
   return (
@@ -19,11 +20,13 @@ export function ArtistCard({ artist }: ArtistCardProps) {
       onClick={() => navigate(`/artists/${artist.id}`)}
       onKeyDown={(e) => e.key === 'Enter' && navigate(`/artists/${artist.id}`)}
       className={clsx(
-        'group relative flex flex-col overflow-hidden',
+        'focus-ring group relative flex flex-col overflow-hidden will-change-transform',
         'rounded-[var(--card-radius)] border border-[var(--border)]',
         'bg-[var(--bg-secondary)] shadow-[var(--card-shadow)]',
-        'transition-all duration-[var(--duration-fast)] ease-[var(--ease-smooth)]',
+        'transition-[transform,box-shadow,border-color,background-color] duration-[var(--duration-normal)] ease-[var(--ease-smooth)]',
         'cursor-pointer hover:border-[var(--border-hover)] hover:bg-[var(--bg-hover)]',
+        'hover:scale-[1.03] hover:shadow-lg hover:z-10 focus-visible:scale-[1.03]',
+        'motion-reduce:transform-none motion-reduce:hover:scale-100',
       )}
     >
       {/* Thumbnail */}
@@ -68,3 +71,5 @@ export function ArtistCard({ artist }: ArtistCardProps) {
     </div>
   );
 }
+
+export const ArtistCard = memo(ArtistCardInner);
