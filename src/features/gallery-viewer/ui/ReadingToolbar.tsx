@@ -52,11 +52,13 @@ export function ReadingToolbar({
   return (
     <div
       className={clsx(
-        'flex items-center gap-3 px-4 py-2',
+        'relative flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2',
         'bg-[var(--bg-primary)]/90 backdrop-blur-sm border-b border-[var(--border)]',
         'transition-opacity duration-[var(--duration-normal)]',
         visible ? 'opacity-100' : 'opacity-0 pointer-events-none',
       )}
+      style={{ WebkitBackdropFilter: 'blur(4px)', zIndex: 'var(--z-reader)' }}
+      aria-hidden={!visible}
     >
       {/* Reading Mode */}
       <div className="flex items-center gap-1">
@@ -66,8 +68,9 @@ export function ReadingToolbar({
             key={m.value}
             title={m.label}
             onClick={() => onReadingModeChange(m.value)}
+            aria-pressed={readingMode === m.value}
             className={clsx(
-              'px-2 py-0.5 text-sm rounded transition-colors',
+              'focus-ring px-2 py-0.5 text-sm rounded transition-colors',
               readingMode === m.value
                 ? 'bg-[var(--accent)] text-white'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]',
@@ -88,8 +91,9 @@ export function ReadingToolbar({
             key={fm.value}
             title={t(fm.labelKey)}
             onClick={() => onFitModeChange(fm.value)}
+            aria-pressed={fitMode === fm.value}
             className={clsx(
-              'px-2 py-0.5 text-xs rounded transition-colors',
+              'focus-ring px-2 py-0.5 text-xs rounded transition-colors',
               fitMode === fm.value
                 ? 'bg-[var(--accent)] text-white'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]',
@@ -110,8 +114,9 @@ export function ReadingToolbar({
             key={d.value}
             title={d.label}
             onClick={() => onReadingDirectionChange(d.value)}
+            aria-pressed={readingDirection === d.value}
             className={clsx(
-              'px-2 py-0.5 text-sm rounded transition-colors',
+              'focus-ring px-2 py-0.5 text-sm rounded transition-colors',
               readingDirection === d.value
                 ? 'bg-[var(--accent)] text-white'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]',
@@ -129,8 +134,9 @@ export function ReadingToolbar({
         <button
           title={t('reader.autoScroll')}
           onClick={() => onAutoScrollChange(!autoScroll)}
+          aria-pressed={autoScroll}
           className={clsx(
-            'px-2 py-0.5 text-xs rounded transition-colors',
+            'focus-ring px-2 py-0.5 text-xs rounded transition-colors',
             autoScroll
               ? 'bg-[var(--accent)] text-white'
               : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]',

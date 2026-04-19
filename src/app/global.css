@@ -41,6 +41,14 @@
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
+
+  /* Z-index scale — layer from content upwards */
+  --z-overlay:  10;  /* Offline overlays, in-card chrome */
+  --z-sticky:   20;  /* Sticky headers inside panes */
+  --z-reader:   30;  /* Reader chrome (header, toolbar) above content */
+  --z-dropdown: 40;  /* Menus, popovers */
+  --z-modal:    50;  /* Dialogs */
+  --z-toast:    60;  /* Toasts sit above modals */
 }
 
 [data-theme="light"] {
@@ -142,6 +150,17 @@ body {
 }
 .scrollbar-hidden::-webkit-scrollbar {
   display: none;
+}
+
+/* Shared focus-visible treatment for keyboard users. Apply alongside any
+   interactive element that doesn't route through the <Button> primitive. */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: inherit;
 }
 
 /* Toast slide-in animation */
