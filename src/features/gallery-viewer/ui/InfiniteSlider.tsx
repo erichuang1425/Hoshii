@@ -13,6 +13,15 @@ interface InfiniteSliderProps {
 const SLIDER_WIDTH = 12; // px, width of the draggable track
 const PREVIEW_WIDTH = 120;
 const PREVIEW_HEIGHT = 160;
+const PREVIEW_CAPTION = 24;
+const VIEWPORT_MARGIN = 8;
+
+function clampPreviewTop(hoverY: number, imageHeight: number): number {
+  const totalHeight = imageHeight + PREVIEW_CAPTION;
+  const desired = hoverY - imageHeight / 2;
+  const maxTop = window.innerHeight - totalHeight - VIEWPORT_MARGIN;
+  return Math.max(VIEWPORT_MARGIN, Math.min(maxTop, desired));
+}
 
 export function InfiniteSlider({ media, currentPage, onSeek }: InfiniteSliderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -145,7 +154,7 @@ export function InfiniteSlider({ media, currentPage, onSeek }: InfiniteSliderPro
           style={{
             width: PREVIEW_WIDTH,
             right: SLIDER_WIDTH + 16,
-            top: Math.max(0, hoverY - PREVIEW_HEIGHT / 2),
+            top: clampPreviewTop(hoverY, PREVIEW_HEIGHT),
           }}
         >
           {isVideoType(previewEntry.mediaType) ? (

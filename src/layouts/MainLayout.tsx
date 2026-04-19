@@ -51,7 +51,7 @@ export function MainLayout() {
             borderColor: 'var(--border)',
           }}
         >
-          <div style={{ width: 'var(--sidebar-width)' }}>
+          <div className="h-full" style={{ width: 'var(--sidebar-width)' }}>
             <Sidebar />
           </div>
         </aside>

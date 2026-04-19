@@ -85,6 +85,7 @@ function NavItem({
   return (
     <button
       onClick={() => navigate(path)}
+      title={label}
       className={clsx(
         'flex w-full items-center gap-2 rounded px-3 py-1.5 text-sm',
         'transition-colors duration-[var(--duration-fast)]',
@@ -95,9 +96,9 @@ function NavItem({
       )}
     >
       {icon && <span className="flex-shrink-0">{icon}</span>}
-      <span className="flex-1 truncate text-left">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-left">{label}</span>
       {isOffline && (
-        <span className="text-xs" style={{ color: 'var(--offline)' }}>
+        <span className="flex-shrink-0 text-xs" style={{ color: 'var(--offline)' }}>
           {t('sidebar.offlineDrive')}
         </span>
       )}
@@ -214,9 +215,10 @@ export function Sidebar() {
                 key={vol.id}
                 className="flex items-center gap-2 rounded px-3 py-1.5 text-sm"
                 style={{ color: vol.isOnline ? 'var(--text-secondary)' : 'var(--offline)' }}
+                title={vol.label ?? vol.uuid}
               >
                 <DriveStatusDot online={vol.isOnline} />
-                <span className="truncate">{vol.label ?? vol.uuid.slice(0, 8)}</span>
+                <span className="min-w-0 flex-1 truncate">{vol.label ?? vol.uuid.slice(0, 8)}</span>
               </div>
             ))
           )}

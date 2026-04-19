@@ -136,6 +136,14 @@ body {
   -webkit-user-select: text;
 }
 
+/* Hide scrollbar cross-browser (WebKit + Firefox) */
+.scrollbar-hidden {
+  scrollbar-width: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
 /* Toast slide-in animation */
 @keyframes slideInRight {
   from {

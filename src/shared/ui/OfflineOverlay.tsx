@@ -12,10 +12,11 @@ export function OfflineOverlay({ driveLabel, className }: OfflineOverlayProps) {
     <div
       className={clsx(
         'absolute inset-0 z-10 flex flex-col items-center justify-center',
-        'bg-[var(--bg-offline)]/50 backdrop-blur-[2px] -webkit-backdrop-filter-blur-[2px]',
+        'bg-[var(--bg-offline)]/50 backdrop-blur-[2px]',
         'animate-[fadeIn_150ms_var(--ease-smooth)]',
         className,
       )}
+      style={{ WebkitBackdropFilter: 'blur(2px)' }}
     >
       <Badge variant="muted">{t('shared.offline')}</Badge>
       {driveLabel && (
