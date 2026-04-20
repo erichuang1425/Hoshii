@@ -1,227 +1,182 @@
-# Development Status
+# Development Status & Current Plan
 
-**All 6 phases are complete.** 158 frontend tests + 117+ Rust tests = 275+ total tests passing. Phase 6 hardening is fully done — all bugs fixed, all features implemented.
+**Snapshot (2026-04-20).** All 6 planned phases are complete. Phase 6 hardening, the post-phase bug-fix pass, and a follow-up UI/accessibility/perf polish pass are also done. **275+ tests passing** (158 frontend + 117+ Rust). The app is feature-complete for desktop; remaining work is polish, tech-debt reduction, and optional roadmap items.
 
----
-
-## Completed Tasks
-
-| Phase | Task | Description |
-|-------|------|-------------|
-| 1 | 1.1 | Project Scaffold (Tauri v2 + React 18 + TS, all feature stubs) |
-| 1 | 1.2 | Rust Core (SQLite WAL, volume tracker, all model structs, 8 tests) |
-| 1 | 1.3 | Shared UI Components (12 components, 2 hooks, mediaUtils, 49 tests) |
-| 2 | 2.1 | Rust Scanner — full + incremental (natural sort, media detection, mtime diff) |
-| 2 | 2.2 | Rust Thumbnail Generator (Lanczos3 resize, WebP output, LRU eviction) |
-| 2 | 2.3 | Rust Media Probe + Video Processing (ffmpeg detection, remux, AVIF→WebP) |
-| 2 | 2.4 | Browse Roots UI (grid, cards, native folder picker, offline section) |
-| 2 | 2.5 | Browse Artists UI (virtualized grid, gallery cards with progress/favorites) |
-| 2 | 2.6 | Gallery Viewer UI (reader, all modes, keyboard shortcuts, click zones) |
-| 2 | 2.7 | Video Player (custom controls, seek, volume, speed, loop, PiP) |
-| 3 | 3.1 | Sidebar Navigation (drives, roots, recent, tags, fixed bottom nav) |
-| 3 | 3.2 | Header Bar (hamburger, search, shortcuts) |
-| 3 | 3.3 | Status Bar (drive count, gallery count, last scan time) |
-| 4 | 4.1 | Settings Page (theme, reading, thumbnails, video, gallery, advanced) |
-| 4 | 4.2 | Favorites System (optimistic toggle, grid page) |
-| 4 | 4.3 | Tag System (add/remove modal, multi-select filter) |
-| 4 | 4.4 | Search (300ms debounce, recent queries, URL sync) |
-| 4 | 4.5 | File Manager (selection, bulk move, create gallery) |
-| 4 | 4.6 | Zip Recovery (integrity verification, per-row restore) |
-| 5 | 5.1a | Webtoon Mode (continuous vertical scroll, virtualized) |
-| 5 | 5.1b | Infinite Slider (scrubbable thumbnail scrollbar) |
-| 5 | 5.1c | Reading Toolbar + Auto-Scroll (fit modes, direction, speed control) |
-| 5 | 5.2 | Smart Collection Linking (Levenshtein + regex, union-find grouping) |
-| 5 | 5.3 | Chronological Smart Linking (date parsing, prev/next chain) |
-| 5 | 5.4 | Timeline Navigation (per-image date plotting, zoom levels) |
+This document is the single source of truth for "what is done, what is broken, and what is next." Everything historical is kept in short form; the forward-looking plan is the priority.
 
 ---
 
-## Phase 6: Hardening & Integration — ✅ COMPLETE
+## 1. Current State (what works today)
 
-### 6.1: Fix Known Bugs — ✅ COMPLETE
+### Features shipped end-to-end
 
-All bugs have been fixed:
+| Area | Status |
+|------|--------|
+| Multi-drive scanning (full + incremental, volume-aware) | ✅ |
+| Thumbnail pipeline (Lanczos3 WebP, LRU eviction) | ✅ |
+| Media probe + ffmpeg remux/convert (AVIF→WebP) | ✅ |
+| Browse Roots / Artists / Gallery reader | ✅ |
+| Reading modes: single, double, vertical scroll, thumbnail grid, long strip, webtoon | ✅ (long_strip wired in `GalleryReader.tsx:256` since eb29056) |
+| Video player (seek, volume, speed, PiP, loop) | ✅ |
+| Sidebar / Header / Status Bar | ✅ |
+| Settings (theme, reading, thumbnails, video, gallery, advanced) + light mode | ✅ |
+| Favorites (optimistic toggle + dedicated page) | ✅ |
+| Tag system (modal, filter bar, batch fetching to avoid N+1) | ✅ |
+| Search (debounced, URL-sync, recent queries) | ✅ |
+| File manager (selection, bulk move, create gallery) | ✅ |
+| Zip recovery (integrity verification + restore) | ✅ |
+| Smart collection linking (Levenshtein + regex, union-find) | ✅ |
+| Chronological linking (filename date parsing, prev/next chain) | ✅ |
+| Timeline navigation (per-image date plotting, zoom) | ✅ |
+| Reading progress (3s debounced save, Continue Reading section) | ✅ |
+| Error boundary (class component, recovery UI) | ✅ |
+| File watcher (notify, 100ms debounce, Tauri events) | ✅ |
+| DB migrations (embedded SQL, schema_version table) | ✅ |
+| Drive status via Tauri events (+30s fallback poll) | ✅ |
+| ArtistCard cover thumbnail (first gallery cover via SQL subquery) | ✅ |
+| i18n (en + zh-TW, full coverage) | ✅ |
 
-| Bug | File | Status |
-|-----|------|--------|
-| `thumbnail_grid` mode uses raw `entry.path` instead of `toAssetUrl()` | `GalleryReader.tsx` | ✅ Fixed — line 173 uses `toAssetUrl(entry.path)` |
-| `getFavoriteGalleries` fetches ALL galleries and filters client-side | `favoritesApi.ts` | ✅ Fixed — calls `get_favorite_galleries` Rust command directly |
-| 12 TypeScript compilation errors (showToast API mismatch, unused imports, read-only ref, missing ReadingMode variant) | Multiple | ✅ Fixed |
-| 2 Rust compilation errors (`SimpleFileOptions` → `FileOptions` for zip 0.6) | `zip_ops.rs` | ✅ Fixed |
-| `normalize_name` didn't strip `vol.`/`ch.` suffixes (with dots) | `smart_grouping.rs` | ✅ Fixed — keywords now include dot variants |
-| `try_ym_separated` incorrectly skipped `YYYY_MM_text` patterns | `chrono_linking.rs` | ✅ Fixed — now checks if chars after separator are digits before skipping |
-| `ReadingMode` type missing `'long_strip'` variant | `media.ts` | ✅ Fixed |
-| Unused `rusqlite::params` imports causing warnings | `favorites.rs`, `tags.rs` | ✅ Fixed |
+### Backend surface
 
----
+- **42 registered Tauri commands** in `src-tauri/src/main.rs`.
+- Services: scanner, thumbnail, media_detector, natural_sort, video_processor, volume_tracker, smart_grouping, chrono_linking, file_watcher.
+- DB: SQLite (WAL), migrations in `src-tauri/src/db/migrations/`.
+- Zero `unwrap()` / `expect()` in production code paths (test code only).
 
-### 6.2: Implement Missing Rust Commands — ✅ COMPLETE (18 of 18 commands)
+### Frontend architecture
 
-All Rust commands implemented and registered in `main.rs`. Total: 42 registered commands.
-
-**Commands (18):**
-
-| Command | File | Status |
-|---------|------|--------|
-| `get_settings` | `commands/settings.rs` | ✅ |
-| `update_settings` | `commands/settings.rs` | ✅ |
-| `get_root_folders` | `commands/root_folders.rs` | ✅ |
-| `add_root_folder` | `commands/root_folders.rs` | ✅ |
-| `remove_root_folder` | `commands/root_folders.rs` | ✅ |
-| `toggle_favorite` | `commands/gallery_ops.rs` | ✅ |
-| `update_reading_progress` | `commands/gallery_ops.rs` | ✅ |
-| `get_recent_galleries` | `commands/gallery_ops.rs` | ✅ |
-| `search_galleries` | `commands/gallery_ops.rs` | ✅ |
-| `get_gallery_tags` | `commands/tag_ops.rs` | ✅ |
-| `add_tag` | `commands/tag_ops.rs` | ✅ |
-| `remove_tag` | `commands/tag_ops.rs` | ✅ |
-| `search_by_tags` | `commands/tag_ops.rs` | ✅ |
-| `get_unorganized_files` | `commands/file_ops.rs` | ✅ |
-| `move_files_to_gallery` | `commands/file_ops.rs` | ✅ |
-| `create_gallery_folder` | `commands/file_ops.rs` | ✅ |
-| `verify_zip_integrity` | `commands/zip_ops.rs` | ✅ |
-| `restore_from_zip` | `commands/zip_ops.rs` | ✅ |
-| `export_metadata` | `commands/metadata_io.rs` | ✅ |
-| `import_metadata` | `commands/metadata_io.rs` | ✅ |
+- 12 feature slices under `src/features/` (browse-artists, browse-roots, chrono-linking, favorites, file-manager, gallery-viewer, reading-progress, search, settings, smart-groups, tag-system, zip-recovery).
+- Cross-feature-slice imports: **zero** after 0e32766. Shared components (`GalleryCard`, `TagModal`) live in `src/shared/ui/` and receive all cross-cutting concerns as props.
+- Zustand stores per feature. No `any` types in TS source.
+- Router + providers in append-only merge-safe files.
 
 ---
 
-### 6.3: Add Error Boundary — ✅ COMPLETE
+## 2. Recently Completed (since the last documentation refresh)
 
-- Created `src/shared/ui/ErrorBoundary.tsx` — class component with `componentDidCatch`, recovery UI with "Try Again" button
-- Wrapped `RouterProvider` in `App.tsx` with `ErrorBoundary`
-- Added 5 tests covering: normal render, error catch, custom fallback, onError callback, retry recovery
-- Exported from `src/shared/ui/index.ts`
+Five commits landed after the previous `DEVELOPMENT_STATUS.md` snapshot. Each resolves an item that was previously listed under "Remaining Work."
 
----
-
-### 6.4: Implement Reading Progress Feature — ✅ COMPLETE
-
-- Created `readingProgressApi.ts` with `updateReadingProgress()` and `getRecentGalleries()`
-- Created `useReadingProgressStore.ts` with `saveProgress()` and `fetchRecentGalleries()`
-- Integrated into `GalleryReader.tsx`: 3s debounced save on page change + save on unmount
-- Added "Continue Reading" section to `HomePage.tsx` with cover images and progress bars
-- Added 5 tests for the store
-- Added i18n keys `shared.continueReading` (en + zh-TW)
+| Commit | Area | What changed |
+|--------|------|-------------|
+| 0e32766 | **Architecture** | Resolved all 7 cross-feature-slice import violations. `GalleryCard` and `TagModal` moved to `shared/ui/` as prop-driven components; pages wire stores and pass data down. `GalleryReader` receives chrono/reading-progress state as props. |
+| eb29056 | **Correctness** | `get_galleries` no longer builds SQL with `format!()` — each allowed ORDER BY is a compile-time `&'static str` chosen via `match`, satisfying CLAUDE.md rule 6. `long_strip` reading mode is now handled (shares `vertical_scroll` branch). |
+| a83fbaf | **Layout** | Seven layout bugs fixed: Sidebar `h-full` collapse in `MainLayout`, flex truncation requiring `min-w-0`, bogus `-webkit-backdrop-filter-blur-[2px]` class, `ThumbnailStrip` thumbnail overflow, Firefox-only `scrollbarWidth: none`, `InfiniteSlider` popover overflowing viewport bottom, `useGridColumns` stuck on fallback (rewritten with `useLayoutEffect` + `ResizeObserver`). |
+| 8f0c06c | **Accessibility & UX** | Global `.focus-ring` utility applied to every non-`<Button>` interactive element; `aria-current` / `aria-pressed` / `aria-expanded` / `aria-label` added where state was only visual; `GalleryCard` handles Space in addition to Enter; `useKeyboard` now ignores editable targets and requires exact modifier match; reader shortcuts `w` / `r` / `s` / `[` / `]` / `f` / Shift+Arrow wired per `UI_REFERENCE.md`; global `/` and Ctrl/Cmd+F focus Header search; semantic z-index tokens (`--z-overlay/sticky/reader/dropdown/modal/toast`) replace magic numbers; `WebkitBackdropFilter` paired with `backdrop-blur-sm`. |
+| 8ce5bcb | **Microinteractions & perf** | `GalleryCard` and `ArtistCard` gain `scale(1.03)` hover + shadow lift and are wrapped in `React.memo`. `Skeleton` uses a shimmer gradient (respects `prefers-reduced-motion`). `ImageView` fades in on load (200ms, `decoding="async"`). `ArtistPage` memoizes `displayedGalleries` (Set-based lookup) and stabilizes `renderCard` with `useCallback` so `memo(GalleryCard)` actually pays off. |
 
 ---
 
-### 6.5: Wire Up SmartGroupsPanel into ArtistPage — ✅ COMPLETE
+## 3. Forward Plan (prioritized remaining work)
 
-SmartGroupsPanel was already imported in ArtistPage. Added:
-- Collapse/expand toggle with chevron icon and smooth rotation
-- Collapsed state hides group list, preserves panel header
-- SmartGroupsPanel now visible even when galleries are filtered to empty (panel stays in sidebar)
+The sections below are **what still needs to happen**, ordered so the next session can pick up at the top.
 
----
+### 3.1 High priority
 
-### 6.6: Integrate Tag System into Gallery Browsing — ✅ COMPLETE
+None at this point. The previous HIGH item — cross-feature import cleanup — is done (0e32766).
 
-- Added tag pills to `GalleryCard.tsx` (first 3 tags shown, "+N" overflow)
-- Added hover tag button on gallery cards to open TagModal for quick tagging
-- Added tag filter bar in `ArtistPage.tsx` (toggle tag pills, clear filter button)
-- Tags batch-loaded per artist via `useTagStore.fetchBatchGalleryTags()` instead of per-card fetching
-- GalleryCard skips fetch if tags already cached
+### 3.2 Medium priority
 
----
+| # | Item | Why | Scope |
+|---|------|-----|-------|
+| M1 | **Connection pooling** | `Mutex<Connection>` serializes every DB call. Under heavy scan + UI fetch load, the UI stalls on scan threads. See `TODO(debt)` at `src-tauri/src/db/mod.rs:9`. | Swap `Mutex<Connection>` for `r2d2` + `r2d2_sqlite`. Update every `db_state.conn.lock()` call site (~15 commands). Keep WAL mode. Re-run the full Rust test suite. |
+| M2 | **EXIF date extraction** | `chrono_linking.rs` only parses dates from filenames, so JPEGs named `IMG_0001.jpg` do not chronologically link. | Add `kamadak-exif` (or `exif` crate); extract `DateTimeOriginal` from JPEG/TIFF during scan; fall back to filename parsing; persist to the existing date column. Unit-test with fixture images. |
+| M3 | **E2E integration tests** | Unit/store tests cannot catch Tauri IPC wiring regressions or router/state interactions. | Add Playwright (Tauri WebDriver) covering: add root → scan → browse artists → open gallery → favorite → tag → search → restart and reload. Run in CI. |
+| M4 | **Accessibility audit pass 2** | 8f0c06c handled focus and keyboard; screen-reader semantics and live regions are not yet audited. | Manual NVDA/VoiceOver pass on reader + modals; add `aria-live` for toasts and scan progress; verify dialog focus trap on `Modal`; confirm tab order on the reader chrome. |
 
-### 6.7: Integrate File Watcher Service — ✅ COMPLETE
+### 3.3 Low priority / roadmap
 
-- Created `src-tauri/src/services/file_watcher.rs` with debounced watch (100ms)
-- `FileWatcherService` manages per-root watchers with `watch_root()`, `unwatch_root()`, `unwatch_all()`
-- Registered in `main.rs`: auto-watches existing root folders on startup
-- Emits `gallery_updated` Tauri event with `rootPath` and `changedPaths`
-- Created `useGalleryUpdateListener` hook for frontend event listening
-- Exported from `src/shared/hooks/index.ts`
-- Wired into `MainLayout.tsx` to auto-refresh roots on file system changes
+| # | Item | Status / notes |
+|---|------|----------------|
+| L1 | Performance profiling at 10k+ galleries | Smoke-test virtual scrolling, thumbnail cache eviction, DB index coverage. Likely output: add indexes on `galleries(artist_id, name)`, `gallery_tags(tag_id)`, and confirm `react-virtual` overscan for the artist grid. |
+| L2 | Mobile / remote access | See `MOBILE_STRATEGY.md` for the comparison matrix. No code work started. |
+| L3 | Additional reading-progress UX | Per-image progress (for long strip) currently stores last-read page only; consider scroll-position persistence. |
+| L4 | Export/import round-trip UI | `export_metadata` / `import_metadata` Rust commands exist but have no dedicated UI; exposed only as advanced setting. |
 
----
+### 3.4 Intentionally NOT doing
 
-### 6.8: Add Missing Test Coverage — ✅ COMPLETE
-
-Added 28 new frontend tests (130 → 158):
-
-| Suite | Tests Added |
-|-------|------------|
-| ErrorBoundary | 5 (render, catch, custom fallback, onError, retry) |
-| File Manager store | 9 (fetch, select, move, create, clear) |
-| Zip Recovery store | 9 (verify, restore, counts, clear) |
-| Reading Progress store | 5 (save, fetch, defaults, error handling) |
+- **Adding a generic HTTP server** — see `MOBILE_STRATEGY.md`; the chosen approach is a companion syncthing/WebDAV flow, not a bundled server.
+- **Abstracting over Tauri vs. web** — app is desktop-first by architecture (see ADR.md).
+- **Any feature gated behind "drive connected" without an explicit offline path** — see CLAUDE.md rule 4.
 
 ---
 
-### 6.9: Implement Light Mode Theme — ✅ COMPLETE
+## 4. Known flaws & technical debt
 
-- Light mode CSS variables already defined in `global.css` under `[data-theme="light"]`
-- All components verified to use CSS variables — no hardcoded hex colors in TSX files
-- Theme toggle wired in `App.tsx` via `document.documentElement.setAttribute('data-theme', theme)`
-- Settings panel has dark/light selector
+Only the items that still bite. Everything previously listed and now fixed has been removed.
 
----
+| Item | Location | Severity | Notes |
+|------|----------|----------|-------|
+| `Mutex<Connection>` serializes DB | `src-tauri/src/db/mod.rs` | Medium | Tracked as M1 above. `TODO(debt)` marker in source. |
+| Filename-only chronological dates | `src-tauri/src/services/chrono_linking.rs` | Medium | Tracked as M2. |
+| No E2E coverage | — | Medium | Tracked as M3. Regressions in IPC wiring are only caught at dev-time. |
+| Reader toolbar i18n has 16 keys; the few remaining hardcoded strings live in dev-only error toasts | `src/shared/ui/ToastProvider.tsx` internals | Low | Error messages bubbled from Rust are passed through unchanged. |
+| `Skeleton` shimmer uses a fixed color stop that looks slightly off on pure-white light-mode backgrounds | `src/shared/ui/Skeleton.tsx` | Low | Needs a light-mode-specific gradient stop. |
+| No offline-mode indicator on the Gallery reader itself (sidebar already shows drive status) | `src/features/gallery-viewer/ui/GalleryReader.tsx` | Low | An `OfflineOverlay` exists in `shared/ui/` but is only used by grid views. |
 
-### 6.10: ArtistCard Thumbnail — ✅ COMPLETE
+Find all in-code debt markers:
 
-- Added `coverPath: Option<String>` to Rust `Artist` model
-- Updated `get_artists` SQL query to include first gallery's `cover_path` via subquery
-- Added `coverPath: string | null` to TypeScript `Artist` interface
-- `ArtistCard` now renders cover image via `toAssetUrl()` with placeholder fallback
+```bash
+grep -rn "TODO(debt)" src/ src-tauri/src/ --include="*.ts" --include="*.tsx" --include="*.rs"
+```
 
-**Files modified:**
-- `src-tauri/src/models/gallery.rs` — added `cover_path` field to `Artist`
-- `src-tauri/src/commands/db_ops.rs` — updated `get_artists` query with cover subquery
-- `src/shared/types/gallery.ts` — added `coverPath` to `Artist` interface
-- `src/features/browse-artists/ui/ArtistCard.tsx` — render cover image or placeholder
-
----
-
-### 6.11: Replace Drive Polling with Tauri Events — ✅ COMPLETE
-
-- `useDriveStatus.ts` now listens for `volume_status_changed` Tauri events via `listen()` API
-- Polling reduced to 30s fallback (from 5s) for resilience
-- `refresh_volume_status` Rust command now emits `volume_status_changed` events when volume online status changes
-- Event payload: `{ volumeId: number, isOnline: boolean }`
-
-**Files modified:**
-- `src/shared/hooks/useDriveStatus.ts` — event-driven + 30s fallback polling
-- `src-tauri/src/commands/volumes.rs` — emit events on status change
+Currently the grep returns **one** marker (the connection-pool note above).
 
 ---
 
-### 6.12: Add Database Migration System — ✅ COMPLETE
+## 5. Things you must know before editing
 
-- Added `schema_version` table to track applied migrations
-- Created `src-tauri/src/db/migrations/` with numbered SQL files
-- Migration runner in `db/mod.rs` applies unapplied migrations in order on startup
-- Migrations are idempotent — re-running skips already-applied versions
-- Added 2 new tests for migration tracking and idempotency
+These are rules and gotchas that have burned previous sessions. Read before touching the listed area.
 
-**Files:**
-- `src-tauri/src/db/mod.rs` — migration runner with `MIGRATIONS` constant
-- `src-tauri/src/db/migrations/001_initial_schema.sql` — original schema
-- `src-tauri/src/db/migrations/002_add_schema_version.sql` — schema_version table
+### 5.1 Hard rules (from CLAUDE.md — re-read if unsure)
+
+1. **Never store `asset://` URLs** in DB or Zustand. Compute at render time via `toAssetUrl()`. The `thumbnail_grid` regression that already cost us once came from this.
+2. **Every async operation handles "drive disconnected."** The drive can vanish mid-scan; the UI must not crash.
+3. **No cross-feature-slice imports.** Share via `shared/` or props. As of 0e32766 the codebase is clean — do not reintroduce violations.
+4. **All SQL parameterized.** `get_galleries` in `db_ops.rs` previously used `format!()` for the ORDER BY clause (safe due to whitelist, but disallowed). Use the `match`-to-`&'static str` pattern instead.
+5. **No `.unwrap()` / `.expect()` in Rust production code.** Tests only.
+6. **No `any` in TypeScript.** Ever.
+7. **Sync local state with props.** `useState` seeded from a prop needs a `useEffect` syncing on prop change. This was the stale-closure favorite-toggle bug.
+8. **Prevent race conditions** on user-driven async. Use a request counter (`artistRequestRef` pattern in `FileManagerPage.tsx`) to discard stale responses.
+
+### 5.2 Tauri v2 specifics
+
+- **`fs` permissions are per-scope, no `fs:allow-all`.** Each permission goes in `src-tauri/capabilities/default.json`.
+- **`protocol-asset` feature is required** on the `tauri` dependency for `toAssetUrl()` to work — it is enabled in `src-tauri/Cargo.toml`.
+- **Migrations are `include_str!()`-compiled**; no runtime file resolution. Add new migrations as `NNN_description.sql` under `src-tauri/src/db/migrations/` and append to the `MIGRATIONS` const in `db/mod.rs`.
+
+### 5.3 Platform-specific gotchas
+
+- **Linux volume detection**: `blkid` requires root on some distros. The fallback chain resolves `/dev/disk/by-uuid/` symlinks. Keep both.
+- **WebKit backdrop-filter**: Tailwind's `backdrop-blur-*` does not emit `-webkit-backdrop-filter`. Pair with an inline `WebkitBackdropFilter` style (see reader header after 8f0c06c).
+- **Firefox-only `scrollbarWidth: none`**: Use the `.scrollbar-hidden` utility in `global.css` for cross-browser hiding.
+- **`useGridColumns` must use `useLayoutEffect` + `ResizeObserver`** — reading width during render returns the fallback.
+
+### 5.4 Build / test gotchas
+
+- **jsdom is explicit**: `vitest` does not bundle it. `jsdom` is in devDependencies; do not remove.
+- **npm install quirks**: if rollup optional deps break the install, use `npm install --prefer-offline --no-optional` then `npm install --ignore-scripts`.
+- **Rust tests require Tauri system deps** (`libgtk-3-dev`, etc.). Frontend tests run cleanly in any Node 20+ environment.
+- **Zustand store tests don't render React**: use `vi.mock()` for the API module and poke state via `useXStore.getState()` / `setState()`.
+
+### 5.5 Patterns to copy
+
+- **Batch fetching over N+1**: `useTagStore.fetchBatchGalleryTags(ids)` called once from the page, `GalleryCard` checks the cache before any fetch.
+- **Event-driven polling fallback**: `useDriveStatus` listens to `volume_status_changed` and keeps a 30s fallback poll — emit an event from Rust on state change, let the frontend subscribe.
+- **Props-over-imports for cross-slice data**: see `GalleryReader`, which takes `chronoData`, `onProgressSave`, etc. as props from `GalleryPage`.
+- **`React.memo` + stable callbacks**: only helps when parents memoize the inputs. See `ArtistPage` after 8ce5bcb for the pairing.
+- **Semantic z-index tokens**: use `--z-modal`, `--z-reader`, `--z-toast` etc. Never write `z-[9999]`.
+
+### 5.6 Keyboard shortcut contract
+
+`useKeyboard` (after 8f0c06c) ignores events inside inputs/textareas/selects/`contenteditable`, and requires **exact modifier match** — a plain `r` binding will not fire when Ctrl+R is pressed. Any new shortcut should pass through this hook; do not bypass it with a raw `window.addEventListener`.
 
 ---
 
-### Additional Bug Fixes (Phase 6 Hardening)
-
-| Bug | Fix | Files |
-|-----|-----|-------|
-| ArtistPage tag filter global scope | Tag filter already intersects `filteredGalleries` with artist's `galleries` (correct scoping) | `ArtistPage.tsx` |
-| `useGalleryUpdateListener` not consumed | Wired into `MainLayout.tsx` to refresh roots on file changes | `MainLayout.tsx` |
-| GalleryCard N+1 tag fetching | Added `fetchBatchGalleryTags()` to tag store; ArtistPage batch-loads; GalleryCard skips if cached | `useTagStore.ts`, `ArtistPage.tsx`, `GalleryCard.tsx` |
-| ArtistPage unused imports | Removed unused `useState` import and `activeTagFilter` local state | `ArtistPage.tsx` |
-| SmartGroupsPanel disappears on empty filter | Panel now renders even when `displayedGalleries` is empty | `ArtistPage.tsx` |
-| `reading-progress/ui/index.ts` empty stub | Removed empty file and directory; removed re-export from barrel | `reading-progress/index.ts` |
-| Metadata export/import unimplemented | Added `export_metadata` and `import_metadata` Rust commands with `.hoshii-meta.json` sidecar | `commands/metadata_io.rs`, `main.rs` |
-| `reading-progress/index.ts` re-exports empty `./ui` | Removed `./ui` re-export | `reading-progress/index.ts` |
-
----
-
-## Test Coverage
+## 6. Test Coverage
 
 | Suite | Tests |
 |-------|-------|
-| Rust (all services + migrations) | 117+ |
+| Rust (services + migrations) | 117+ |
 | Shared UI (incl. ErrorBoundary) | 54 |
 | Browse Roots store | 5 |
 | Browse Artists store | 6 |
@@ -241,141 +196,23 @@ Added 28 new frontend tests (130 → 158):
 | **Frontend total** | **158** |
 | **Grand total** | **275+** |
 
-**Note:** Rust tests require `libgtk-3-dev` and other Tauri system dependencies. Frontend tests run cleanly with `npx vitest run`. Run `npm install` before frontend tests.
+Run:
 
----
-
-## i18n Coverage (en + zh-TW)
-
-Browse Roots (12), Browse Artists (14), Gallery Viewer (3), Video Player (6), Sidebar (11), Header (4), Status Bar (9), Settings (40+), Favorites (5), Tags (11), Search (7), File Manager (12), Zip Recovery (15), Shared (16), Reader Toolbar (13), Smart Groups (2), Timeline (3).
-
----
-
-## Known Technical Debt
-
-| Item | File | Category |
-|------|------|----------|
-| `Mutex<Connection>` — needs connection pool | `db/mod.rs` | PERF |
-| ~~Polls drives every 5s instead of Tauri events~~ | `useDriveStatus.ts` | ~~UX~~ ✅ Fixed (6.11) |
-| ~~Light mode CSS not implemented~~ | `global.css` | ~~UI~~ ✅ Fixed (6.9) |
-| ~~`ArtistCard` uses placeholder, not first gallery cover~~ | `ArtistCard.tsx` | ~~UI~~ ✅ Fixed (6.10) |
-| ~~`thumbnail_grid` mode uses raw `entry.path`, not `toAssetUrl()`~~ | `GalleryReader.tsx` | ~~Bug~~ ✅ Fixed |
-| ~~`getFavoriteGalleries` filters all galleries client-side~~ | `favoritesApi.ts` | ~~PERF~~ ✅ Fixed |
-| ~~15 frontend `invoke()` calls reference unimplemented Rust commands~~ | Backend | ~~Critical~~ ✅ Fixed |
-| ~~`SmartGroupsPanel` not wired into `ArtistPage`~~ | `SmartGroupsPanel.tsx` | ~~Missing~~ ✅ Fixed (6.5) |
-| EXIF date extraction not implemented (filename-based only) | `chrono_linking.rs` | Feature gap |
-| ~~No Error Boundary~~ | `App.tsx` | ~~Robustness~~ ✅ Fixed (6.3) |
-| ~~`reading-progress` feature is an empty stub~~ | `features/reading-progress/` | ~~Missing~~ ✅ Fixed (6.4) |
-| ~~File watcher (`notify`) imported but not integrated~~ | `services/file_watcher.rs` | ~~Missing~~ ✅ Fixed (6.7) |
-| ~~Settings commands (`get_settings`/`update_settings`) not implemented~~ | Backend | ~~Missing~~ ✅ Fixed |
-| ~~Metadata export/import commands not implemented~~ | Backend | ~~Missing~~ ✅ Fixed |
-| ~~No database migration system~~ | `db/mod.rs` | ~~Tech debt~~ ✅ Fixed (6.12) |
-| ~~File Manager + Zip Recovery have no frontend tests~~ | Frontend | ~~Test gap~~ ✅ Fixed (6.8) |
-| ~~Tag filtering in ArtistPage doesn't scope to current artist~~ | `ArtistPage.tsx` | ~~UX~~ ✅ Verified correct |
-| ~~`useGalleryUpdateListener` hook created but not yet consumed by stores~~ | Frontend | ~~Integration gap~~ ✅ Fixed |
-
-Find all in-code debt markers:
 ```bash
-grep -rn "TODO(debt)" src/ src-tauri/src/ --include="*.ts" --include="*.tsx" --include="*.rs"
+npm run test                                        # Frontend
+cargo test --manifest-path src-tauri/Cargo.toml     # Rust
+cargo clippy --manifest-path src-tauri/Cargo.toml   # Rust lint
+npm run tauri dev                                   # Dev with hot reload
 ```
 
 ---
 
-## Session Insights
+## 7. Historical reference
 
-### Tauri v2 capabilities require explicit fs permission entries
-No `fs:allow-all` exists. Each permission must be listed individually in `src-tauri/capabilities/default.json`.
+Phase-by-phase task completion, original bug lists, and the post-phase bug-fix breakdown are preserved in:
 
-### Linux volume detection needs fallback chain
-`blkid` requires root on some distros. Fallback: `/dev/disk/by-uuid/` symlink resolution. File: `services/volume_tracker.rs`.
+- `claude/BUG_FIX_GUIDE.md` — educational writeup of every bug fixed (frontend + Rust).
+- `claude/archive/PROGRESS.md` — per-phase narrative.
+- `claude/archive/TASK_BREAKDOWN.md` — original task list (1.1 through 6.12).
 
-### Natural sort uses FIRST digit sequence
-Must extract the **first** digit sequence (not last) to correctly group `pic2_final.jpg` as group "pic", number 2. File: `services/natural_sort.rs`.
-
-### jsdom must be an explicit devDependency
-Vitest `environment: 'jsdom'` does not bundle jsdom. Requires `npm install --save-dev jsdom`.
-
-### Zustand store tests work without React rendering
-All store tests use `vi.mock()` for API modules and `getState()`/`setState()` directly.
-
-### Modal.tsx has no `onOpen` callback
-Use `useEffect(() => { if (open) doThing(); }, [open])` instead of an `onOpen` prop.
-
-### npm install with optional deps can break rollup
-Use `npm install --prefer-offline --no-optional` then `npm install --ignore-scripts` if rollup errors appear.
-
-### Batch tag fetching prevents N+1 API calls
-When loading artist galleries, call `fetchBatchGalleryTags(galleryIds)` once from ArtistPage instead of per-card fetching. GalleryCard checks cache before individual fetch.
-
-### DB migration system uses embedded SQL
-Migrations are `include_str!()` compiled into the binary. No runtime file resolution needed. Migration runner bootstraps `schema_version` table before checking versions.
-
----
-
-## Post-Phase Bug-Fix Session — ✅ COMPLETE
-
-Systematic code review identified and fixed 12 bugs across 15 files. All 158 frontend tests pass, 0 TypeScript errors.
-
-### Frontend Fixes (9)
-
-| Bug | File(s) | Fix |
-|-----|---------|-----|
-| Favorite toggle stale closure — `localFavorited` never synced with `gallery.favorited` prop changes | `GalleryCard.tsx` | Added `useEffect` to sync `localFavorited` when `gallery.favorited` prop changes |
-| Move modal retained stale gallery selection | `FileManagerView.tsx` | Reset `selectedGalleryPath` to `''` when opening modal |
-| Silent localStorage failure in reader prefs | `useGalleryReaderStore.ts` | Added `logger.warn()` instead of empty catch block |
-| Missing error state in reading progress | `useReadingProgressStore.ts` | Added `saveError` and `fetchError` state fields |
-| Race condition on artist change — galleries could show for wrong artist | `FileManagerPage.tsx` | Added `artistRequestRef` counter to discard stale responses |
-| FIT_MODES labels hardcoded in English | `ReadingToolbar.tsx`, `translations.ts` | Added `reader.fitBest/fitWidth/fitHeight/fitOriginal` i18n keys (en + zh-TW) |
-| Double fetch on mount — two `useEffects` both called `fetchGalleries` | `ArtistPage.tsx` | Merged into single `useEffect` with `gallerySort` in deps |
-| Double search from URL — `setQuery()` + `search()` both fired | `SearchPage.tsx` | Removed redundant `setQuery()` call; `search()` already sets query |
-| ErrorBoundary test TypeScript error | `ErrorBoundary.test.tsx` | Added `React.JSX.Element` return type to throwing component |
-
-### Rust Backend Fixes (3)
-
-| Bug | File(s) | Fix |
-|-----|---------|-----|
-| Duplicate `Tag` struct — `tags.rs` had `gallery_count: i64`, models had `Option<i64>` | `commands/tags.rs` | Removed duplicate struct, import `Tag` from `crate::models` |
-| Gallery sort parameter silently ignored — backend always sorted by name | `commands/db_ops.rs`, `commands/scan_gallery.rs` | Added `sort: Option<String>` parameter, implemented 8 sort orders |
-| `.expect()` panic in production startup code | `main.rs` | Replaced with `match` + `log::warn()` |
-| Volume fallback could cause FK violation | `commands/root_folders.rs` | Added cascading fallback with error logging |
-
-### Lessons Learned
-
-See [BUG_FIX_GUIDE.md](BUG_FIX_GUIDE.md) for detailed educational writeup of each bug, detection method, and fix rationale.
-
----
-
-## Remaining Work (Post-Phase 6)
-
-All planned phases and hardening tasks are complete. Remaining items for future consideration:
-
-| # | Item | Priority | Description |
-|---|------|----------|-------------|
-| 1 | Cross-feature import cleanup | **HIGH** | 7 violations across 4 files — see details below. Violates CLAUDE.md rule 5. |
-| 2 | EXIF date extraction | MEDIUM | `chrono_linking.rs` only parses dates from filenames. Add EXIF extraction for JPEG/TIFF for more accurate chronological linking. |
-| 3 | Connection pooling | MEDIUM | Replace `Mutex<Connection>` with `r2d2-sqlite` connection pool for better concurrent access (documented debt in `db/mod.rs`). |
-| 4 | E2E integration tests | MEDIUM | Add Playwright tests for critical flows: add root, scan, browse, read gallery, favorite, tag, search. |
-| 5 | Accessibility audit | MEDIUM | Screen reader support, keyboard-only navigation, ARIA attributes, focus management in gallery reader and modals. |
-| 6 | Performance profiling | LOW | Test with 10k+ galleries to identify bottlenecks in virtual scrolling, thumbnail loading, and DB queries. |
-| 7 | `long_strip` reading mode | LOW | Referenced in settings but not implemented in `GalleryReader.tsx`. Either implement or remove from settings. |
-| 8 | Mobile/remote access | LOW | See [MOBILE_STRATEGY.md](MOBILE_STRATEGY.md) for comprehensive comparison of all phone access approaches. |
-
-### Cross-Feature Import Violations (Detail)
-
-7 violations across 4 files. All use `@/features/` alias pattern.
-
-| Source File | Line | Imports From | What |
-|-------------|------|-------------|------|
-| `browse-artists/ui/GalleryCard.tsx` | 8 | `favorites/` | `useFavoritesStore` (store) |
-| `browse-artists/ui/GalleryCard.tsx` | 9 | `tag-system/` | `useTagStore` (store) |
-| `browse-artists/ui/GalleryCard.tsx` | 10 | `tag-system/` | `TagModal` (component) |
-| `favorites/ui/FavoritesGrid.tsx` | 3 | `browse-artists/` | `GalleryCard` (component) |
-| `search/ui/SearchResults.tsx` | 3 | `browse-artists/` | `GalleryCard` (component) |
-| `gallery-viewer/ui/GalleryReader.tsx` | 9 | `chrono-linking/` | `useChronoStore` (store) |
-| `gallery-viewer/ui/GalleryReader.tsx` | 10 | `reading-progress/` | `useReadingProgressStore` (store) |
-
-**Fix strategy:**
-1. **GalleryCard** → Move to `shared/ui/` (it's used by 3 features: browse-artists, favorites, search)
-2. **GalleryCard's favorites/tag imports** → Pass `isFavorited`, `onToggleFavorite`, `tags`, `onOpenTagModal` as props from parent pages
-3. **TagModal** → Move to `shared/ui/` (used across features)
-4. **GalleryReader's chrono/reading-progress imports** → Pass `chronoData` and `onProgressSave` as props from `GalleryPage.tsx`
+Do not treat the archive as authoritative for current code shape; it is a log, not a spec.
