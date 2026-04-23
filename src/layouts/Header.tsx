@@ -3,32 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { t } from '@/shared/i18n';
 import { useLayoutStore } from './useLayoutStore';
-
-function HamburgerIcon() {
-  return (
-    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <line x1={3} y1={6} x2={21} y2={6} />
-      <line x1={3} y1={12} x2={21} y2={12} />
-      <line x1={3} y1={18} x2={21} y2={18} />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg
-      className="pointer-events-none absolute left-2.5 h-4 w-4"
-      style={{ color: 'var(--text-muted)' }}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <circle cx={11} cy={11} r={8} />
-      <line x1={21} y1={21} x2={16.65} y2={16.65} />
-    </svg>
-  );
-}
+import { LayoutSwitcher } from './LayoutSwitcher';
+import { MenuIcon, SearchIcon } from './icons';
 
 function HeartIcon() {
   return (
@@ -47,7 +23,27 @@ function SettingsGearIcon() {
   );
 }
 
-export function Header() {
+export interface HeaderProps {
+  /**
+   * `classic`: full-width bar with hamburger, used by the sidebar + compact layouts.
+   * `floating`: translucent pill used by the focus layout.
+   * `bare`: logo + utilities only (no hamburger), used by the top-nav layout.
+   */
+  variant?: 'classic' | 'floating' | 'bare';
+  /** Render an extra slot between the title and the search input (used by top nav). */
+  centerSlot?: React.ReactNode;
+  /** Callback invoked when the hamburger is pressed. Defaults to toggling the sidebar. */
+  onMenuClick?: () => void;
+  /** Hide the hamburger entirely (used by bare variant). */
+  hideMenu?: boolean;
+}
+
+export function Header({
+  variant = 'classic',
+  centerSlot,
+  onMenuClick,
+  hideMenu = false,
+}: HeaderProps) {
   const navigate = useNavigate();
   const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -69,30 +65,38 @@ export function Header() {
     [navigate],
   );
 
+  const isFloating = variant === 'floating';
+
   return (
     <header
-      className="flex flex-shrink-0 items-center gap-3 border-b px-3"
+      className={clsx(
+        'flex flex-shrink-0 items-center gap-3',
+        isFloating
+          ? 'surface-glass mx-3 mt-3 rounded-full border px-3'
+          : 'border-b px-3',
+      )}
       style={{
         height: 'var(--header-height)',
-        backgroundColor: 'var(--bg-secondary)',
+        backgroundColor: isFloating ? undefined : 'var(--bg-secondary)',
         borderColor: 'var(--border)',
+        boxShadow: isFloating ? 'var(--floating-shadow)' : undefined,
       }}
     >
-      {/* Hamburger toggle */}
-      <button
-        onClick={toggleSidebar}
-        className={clsx(
-          'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded',
-          'transition-colors duration-[var(--duration-fast)]',
-          'hover:bg-[var(--bg-hover)]',
-        )}
-        style={{ color: 'var(--text-secondary)' }}
-        aria-label="Toggle sidebar"
-      >
-        <HamburgerIcon />
-      </button>
+      {!hideMenu && (
+        <button
+          onClick={onMenuClick ?? toggleSidebar}
+          className={clsx(
+            'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded',
+            'transition-colors duration-[var(--duration-fast)]',
+            'hover:bg-[var(--bg-hover)]',
+          )}
+          style={{ color: 'var(--text-secondary)' }}
+          aria-label={t('header.toggleMenu')}
+        >
+          <MenuIcon />
+        </button>
+      )}
 
-      {/* App title */}
       <button
         onClick={() => navigate('/')}
         className="flex-shrink-0 text-base font-bold transition-colors duration-[var(--duration-fast)] hover:opacity-80"
@@ -101,12 +105,12 @@ export function Header() {
         {t('header.title')}
       </button>
 
-      {/* Spacer */}
-      <div className="flex-1" />
+      {centerSlot && <div className="flex min-w-0 flex-1 items-center">{centerSlot}</div>}
+      {!centerSlot && <div className="flex-1" />}
 
       {/* Search input */}
       <div className="relative flex max-w-sm flex-1 items-center">
-        <SearchIcon />
+        <SearchIcon className="pointer-events-none absolute left-2.5" />
         <input
           ref={searchRef}
           type="search"
@@ -121,7 +125,8 @@ export function Header() {
         />
       </div>
 
-      {/* Favorites shortcut */}
+      <LayoutSwitcher compact={isFloating} />
+
       <button
         onClick={() => navigate('/favorites')}
         className={clsx(
@@ -135,7 +140,6 @@ export function Header() {
         <HeartIcon />
       </button>
 
-      {/* Settings shortcut */}
       <button
         onClick={() => navigate('/settings')}
         className={clsx(

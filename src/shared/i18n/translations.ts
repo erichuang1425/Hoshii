@@ -48,6 +48,7 @@ const translations: Record<string, Record<string, string>> = {
     'videoPlayer.remuxing': 'Converting video...',
 
     // Sidebar (Task 3.1)
+    'sidebar.home': 'Home',
     'sidebar.drives': 'Drives',
     'sidebar.roots': 'Root Folders',
     'sidebar.recent': 'Recent',
@@ -65,6 +66,22 @@ const translations: Record<string, Record<string, string>> = {
     'header.searchPlaceholder': 'Search galleries...',
     'header.openSettings': 'Settings',
     'header.openFavorites': 'Favorites',
+    'header.toggleMenu': 'Toggle navigation',
+
+    // Layout switcher
+    'layout.sectionTitle': 'Layout',
+    'layout.switcherLabel': 'Change layout',
+    'layout.classic': 'Classic',
+    'layout.classicDesc': 'Full sidebar with sections, header and status bar.',
+    'layout.compact': 'Compact',
+    'layout.compactDesc': 'Slim icon rail with a pop-out drawer for deep nav.',
+    'layout.top': 'Top nav',
+    'layout.topDesc': 'Horizontal tabs, no sidebar — maximum content width.',
+    'layout.focus': 'Focus',
+    'layout.focusDesc': 'Minimal floating chrome for distraction-free browsing.',
+    'settings.layout': 'Layout',
+    'settings.layoutMode': 'Workspace layout',
+    'settings.layoutModeDesc': 'Switch between sidebar, rail, top-nav and focus shells.',
 
     // Status Bar (Task 3.3)
     'statusBar.drives': 'drives',
@@ -285,6 +302,7 @@ const translations: Record<string, Record<string, string>> = {
     'videoPlayer.remuxing': '轉檔中...',
 
     // Sidebar (Task 3.1)
+    'sidebar.home': '首頁',
     'sidebar.drives': '磁碟',
     'sidebar.roots': '根資料夾',
     'sidebar.recent': '最近',
@@ -302,6 +320,22 @@ const translations: Record<string, Record<string, string>> = {
     'header.searchPlaceholder': '搜尋圖庫...',
     'header.openSettings': '設定',
     'header.openFavorites': '收藏',
+    'header.toggleMenu': '切換導覽',
+
+    // Layout switcher
+    'layout.sectionTitle': '版面',
+    'layout.switcherLabel': '切換版面',
+    'layout.classic': '經典',
+    'layout.classicDesc': '完整側邊欄，含分類、標頭與狀態列。',
+    'layout.compact': '精簡',
+    'layout.compactDesc': '細長圖示列，深層導覽以彈出抽屜顯示。',
+    'layout.top': '頂端導覽',
+    'layout.topDesc': '橫向分頁，無側邊欄 — 最大化內容寬度。',
+    'layout.focus': '專注',
+    'layout.focusDesc': '最小化浮動介面，讓內容專注呈現。',
+    'settings.layout': '版面',
+    'settings.layoutMode': '工作區版面',
+    'settings.layoutModeDesc': '在側邊欄、精簡列、頂端導覽與專注模式之間切換。',
 
     // Status Bar (Task 3.3)
     'statusBar.drives': '磁碟',

@@ -3,6 +3,8 @@ import { t } from '@/shared/i18n';
 import { Spinner } from '@/shared/ui';
 import { useToast } from '@/shared/ui/ToastProvider';
 import { useSettingsStore } from '../model/useSettingsStore';
+import { useLayoutStore, type LayoutMode } from '@/layouts/useLayoutStore';
+import { LAYOUT_META } from '@/layouts/layoutMeta';
 import type { AppSettings } from '@/shared/types/media';
 import type { ReadingMode, ReadingDirection, FitMode } from '@/shared/types/media';
 
@@ -146,6 +148,57 @@ function NumberInput({
   );
 }
 
+// ─── Layout picker (card grid) ────────────────────────────────────────────────
+
+function LayoutPicker() {
+  const layoutMode = useLayoutStore((s) => s.layoutMode);
+  const setLayoutMode = useLayoutStore((s) => s.setLayoutMode);
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {LAYOUT_META.map((meta) => {
+        const active = meta.id === layoutMode;
+        const Glyph = meta.Glyph;
+        return (
+          <button
+            key={meta.id}
+            onClick={() => setLayoutMode(meta.id as LayoutMode)}
+            aria-pressed={active}
+            className={clsx(
+              'group flex flex-col items-start gap-2 rounded-lg border p-3 text-left',
+              'transition-all duration-[var(--duration-fast)]',
+              'hover:border-[var(--border-hover)]',
+            )}
+            style={{
+              borderColor: active ? 'var(--accent)' : 'var(--border)',
+              backgroundColor: active ? 'var(--accent-muted)' : 'var(--bg-secondary)',
+            }}
+          >
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-md"
+              style={{
+                backgroundColor: active ? 'var(--bg-secondary)' : 'var(--bg-elevated)',
+                color: active ? 'var(--accent)' : 'var(--text-secondary)',
+              }}
+            >
+              <Glyph className="h-6 w-6" />
+            </span>
+            <span
+              className="text-sm font-semibold"
+              style={{ color: active ? 'var(--accent)' : 'var(--text-primary)' }}
+            >
+              {t(meta.labelKey)}
+            </span>
+            <span className="text-xs leading-snug" style={{ color: 'var(--text-muted)' }}>
+              {t(meta.descriptionKey)}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export function SettingsPanel() {
@@ -167,6 +220,21 @@ export function SettingsPanel() {
           <span>{t('shared.loading')}</span>
         </div>
       )}
+
+      {/* Layout */}
+      <Section title={t('settings.layout')}>
+        <div className="space-y-2">
+          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+            {t('settings.layoutMode')}
+          </p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            {t('settings.layoutModeDesc')}
+          </p>
+          <div className="pt-2">
+            <LayoutPicker />
+          </div>
+        </div>
+      </Section>
 
       {/* Theme & Language */}
       <Section title={t('settings.theme')}>
