@@ -34,8 +34,12 @@
   --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   --thumb-ratio: 3 / 4;
   --sidebar-width: 240px;
+  --rail-width: 64px;
+  --topnav-height: 88px;
   --header-height: 48px;
+  --status-bar-height: 28px;
   --reader-bg: #000000;
+  --floating-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 
   /* Animation */
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -75,6 +79,7 @@
   /* Layout */
   --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   --reader-bg: #f0f0f3;
+  --floating-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
 }
 
 /* Base resets */
@@ -152,4 +157,23 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* Slide-down animation used by floating chrome in focus layout */
+@keyframes slideDown {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Translucent surface used by floating chrome. Safari needs the -webkit prefix. */
+.surface-glass {
+  background-color: color-mix(in oklab, var(--bg-secondary) 78%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
 }
