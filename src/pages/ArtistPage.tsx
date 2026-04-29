@@ -65,9 +65,11 @@ export function ArtistPage() {
   }, [galleries, galleryTags]);
 
   // Determine displayed galleries (filtered or all)
-  const displayedGalleries = activeTagFilterState.length > 0
-    ? galleries.filter((g) => filteredGalleries.some((fg) => fg.id === g.id))
-    : galleries;
+  const displayedGalleries = useMemo(() => {
+    if (activeTagFilterState.length === 0) return galleries;
+    const filteredIds = new Set(filteredGalleries.map((fg) => fg.id));
+    return galleries.filter((g) => filteredIds.has(g.id));
+  }, [activeTagFilterState, galleries, filteredGalleries]);
 
   // Fetch galleries on mount and when sort or artist changes
   useEffect(() => {
@@ -76,16 +78,17 @@ export function ArtistPage() {
     }
   }, [gallerySort, numericArtistId, fetchGalleries]);
 
-  function renderCard(gallery: Gallery) {
-    return (
+  const renderCard = useCallback(
+    (gallery: Gallery) => (
       <GalleryCard
         gallery={gallery}
         tags={getGalleryTags(gallery.id)}
         onToggleFavorite={toggleFavorite}
         onOpenTagModal={setTagModalGalleryId}
       />
-    );
-  }
+    ),
+    [getGalleryTags, toggleFavorite],
+  );
 
   return (
     <div className="flex h-full flex-col">

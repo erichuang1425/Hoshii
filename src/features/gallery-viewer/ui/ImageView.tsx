@@ -43,8 +43,8 @@ export function ImageView({ media, fitMode = 'contain', zoomLevel = 1 }: ImageVi
           onLoad={handleLoad}
           onError={handleError}
           className={clsx(
-            'max-h-full transition-opacity duration-[var(--duration-fast)]',
-            loaded ? 'opacity-100' : 'opacity-0',
+            'max-h-full transition-[opacity,filter] duration-[var(--duration-normal)] ease-[var(--ease-smooth)]',
+            loaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm',
             fitMode === 'width' && 'w-full',
           )}
           style={{
@@ -52,6 +52,7 @@ export function ImageView({ media, fitMode = 'contain', zoomLevel = 1 }: ImageVi
             transform: zoomLevel !== 1 ? `scale(${zoomLevel})` : undefined,
           }}
           draggable={false}
+          decoding="async"
         />
       )}
     </div>
