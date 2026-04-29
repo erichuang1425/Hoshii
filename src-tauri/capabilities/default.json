@@ -11,7 +11,7 @@
     "fs:allow-write",
     "fs:allow-exists",
     "fs:allow-stat",
-    "fs:allow-readdir",
+    "fs:allow-read-dir",
     "fs:allow-rename",
     "fs:allow-copy-file",
     "fs:allow-remove",

@@ -1,1 +1,7 @@
-// browse-roots/api - Tauri command wrappers
+export {
+  getRootFolders,
+  addRootFolder,
+  removeRootFolder,
+  scanRootFolder,
+  getVolumes,
+} from './rootFolderApi';

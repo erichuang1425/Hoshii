@@ -5,6 +5,10 @@ import { ArtistListPage } from '@/pages/ArtistListPage';
 import { ArtistPage } from '@/pages/ArtistPage';
 import { GalleryPage } from '@/pages/GalleryPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { FavoritesPage } from '@/pages/FavoritesPage';
+import { SearchPage } from '@/pages/SearchPage';
+import { FileManagerPage } from '@/pages/FileManagerPage';
+import { ZipRecoveryPage } from '@/pages/ZipRecoveryPage';
 
 export const router = createBrowserRouter([
   {
@@ -15,8 +19,10 @@ export const router = createBrowserRouter([
       { path: 'roots/:rootId/artists', element: <ArtistListPage /> },
       { path: 'artists/:artistId', element: <ArtistPage /> },
       { path: 'settings', element: <SettingsPage /> },
-      // Phase 3 routes appended here:
-      // { path: 'file-manager', element: <FileManagerPage /> },
+      { path: 'favorites', element: <FavoritesPage /> },
+      { path: 'search', element: <SearchPage /> },
+      { path: 'file-manager', element: <FileManagerPage /> },
+      { path: 'zip-recovery', element: <ZipRecoveryPage /> },
     ],
   },
   // Reader is full-screen, outside MainLayout

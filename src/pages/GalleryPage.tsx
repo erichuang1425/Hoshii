@@ -1,27 +1,23 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useKeyboard } from '@/shared/hooks/useKeyboard';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { GalleryReader } from '@/features/gallery-viewer/ui/GalleryReader';
 
-/**
- * Gallery reader page — full-screen media viewer.
- * This renders OUTSIDE MainLayout (no sidebar/header).
- * Implemented in Task 2.6 (Gallery Viewer Feature).
- */
 export function GalleryPage() {
   const { galleryId } = useParams<{ galleryId: string }>();
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const numericId = Number(galleryId);
+  const artistId = searchParams.get('artistId') ? Number(searchParams.get('artistId')) : undefined;
 
-  useKeyboard([
-    { key: 'Escape', action: () => navigate(-1) },
-  ]);
+  if (isNaN(numericId)) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-[var(--reader-bg)]">
+        <p className="text-[var(--text-muted)]">Invalid gallery ID</p>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="flex h-screen w-screen items-center justify-center"
-      style={{ backgroundColor: 'var(--reader-bg)' }}
-    >
-      <p style={{ color: 'var(--text-muted)' }}>
-        Gallery #{galleryId} — reader placeholder. Press Escape to exit.
-      </p>
+    <div className="h-screen w-screen">
+      <GalleryReader galleryId={numericId} artistId={artistId} />
     </div>
   );
 }

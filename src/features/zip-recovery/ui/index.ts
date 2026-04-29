@@ -1,1 +1,1 @@
-// zip-recovery/ui - React components
+export * from './ZipRecoveryView';

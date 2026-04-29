@@ -43,6 +43,40 @@
   --duration-normal: 250ms;
 }
 
+[data-theme="light"] {
+  /* Backgrounds */
+  --bg-primary: #f8f8fa;
+  --bg-secondary: #ffffff;
+  --bg-elevated: #f0f0f3;
+  --bg-hover: #e8e8eb;
+  --bg-active: #dddde0;
+  --bg-offline: #faf0f0;
+
+  /* Text */
+  --text-primary: #1a1a1e;
+  --text-secondary: #6b6b78;
+  --text-muted: #9b9ba6;
+
+  /* Accent */
+  --accent: #d94560;
+  --accent-hover: #c73b54;
+  --accent-muted: rgba(217, 69, 96, 0.10);
+
+  /* Borders */
+  --border: #d8d8dc;
+  --border-hover: #c0c0c6;
+
+  /* Status */
+  --success: #16a34a;
+  --warning: #d97706;
+  --error: #dc2626;
+  --offline: #9ca3af;
+
+  /* Layout */
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --reader-bg: #f0f0f3;
+}
+
 /* Base resets */
 *,
 *::before,
@@ -100,4 +134,22 @@ body {
 .selectable {
   user-select: text;
   -webkit-user-select: text;
+}
+
+/* Toast slide-in animation */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Fade-in animation for overlays */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
