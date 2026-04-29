@@ -49,8 +49,9 @@ function SidebarSection({
     <div className="mb-2">
       <button
         onClick={() => toggleSection(sectionKey)}
+        aria-expanded={!isCollapsed}
         className={clsx(
-          'flex w-full items-center gap-1.5 rounded px-2 py-1',
+          'focus-ring flex w-full items-center gap-1.5 rounded px-2 py-1',
           'text-xs font-semibold uppercase tracking-wider',
           'transition-colors duration-[var(--duration-fast)]',
           'hover:bg-[var(--bg-hover)]',
@@ -86,8 +87,9 @@ function NavItem({
     <button
       onClick={() => navigate(path)}
       title={label}
+      aria-current={isActive ? 'page' : undefined}
       className={clsx(
-        'flex w-full items-center gap-2 rounded px-3 py-1.5 text-sm',
+        'focus-ring flex w-full items-center gap-2 rounded px-3 py-1.5 text-sm',
         'transition-colors duration-[var(--duration-fast)]',
         isActive
           ? 'bg-[var(--accent-muted)] font-medium text-[var(--accent)]'

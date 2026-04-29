@@ -44,9 +44,14 @@ export function GalleryCard({
       role="button"
       tabIndex={0}
       onClick={() => navigate(`/gallery/${gallery.id}`)}
-      onKeyDown={(e) => e.key === 'Enter' && navigate(`/gallery/${gallery.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navigate(`/gallery/${gallery.id}`);
+        }
+      }}
       className={clsx(
-        'group relative flex flex-col overflow-hidden',
+        'focus-ring group relative flex flex-col overflow-hidden',
         'rounded-[var(--card-radius)] border border-[var(--border)]',
         'bg-[var(--bg-secondary)] shadow-[var(--card-shadow)]',
         'transition-all duration-[var(--duration-fast)] ease-[var(--ease-smooth)]',
@@ -89,17 +94,18 @@ export function GalleryCard({
           <span className="absolute top-2 left-2 h-2 w-2 rounded-full bg-[var(--accent)]" />
         )}
 
-        {/* Favorite heart - shown on hover, always visible if favorited */}
+        {/* Favorite heart - shown on hover, always visible if favorited or focused */}
         <button
           onClick={handleFavoriteClick}
           className={clsx(
-            'absolute top-2 right-2',
+            'focus-ring absolute top-2 right-2 rounded',
             'transition-all duration-[var(--duration-fast)]',
             localFavorited
               ? 'text-[var(--accent)] opacity-100'
-              : 'text-white opacity-0 group-hover:opacity-100',
+              : 'text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
           )}
           aria-label={localFavorited ? t('browseArtists.unfavorite') : t('browseArtists.favorite')}
+          aria-pressed={localFavorited}
         >
           <svg
             className="h-5 w-5 drop-shadow"
@@ -145,7 +151,7 @@ export function GalleryCard({
       {onOpenTagModal && (
         <button
           onClick={(e) => { e.stopPropagation(); onOpenTagModal(gallery.id); }}
-          className="absolute bottom-8 right-2 rounded p-1 text-[var(--text-muted)] opacity-0 transition-opacity hover:text-[var(--text-primary)] group-hover:opacity-100"
+          className="focus-ring absolute bottom-8 right-2 rounded p-1 text-[var(--text-muted)] opacity-0 transition-opacity hover:text-[var(--text-primary)] group-hover:opacity-100 focus-visible:opacity-100"
           aria-label={t('tags.manage')}
         >
           <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
