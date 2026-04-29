@@ -1,9 +1,13 @@
+import type { Gallery } from '@/shared/types';
 import { t } from '@/shared/i18n';
 import { Spinner } from '@/shared/ui';
-import { GalleryCard } from '@/features/browse-artists/ui/GalleryCard';
 import { useFavoritesStore } from '../model/useFavoritesStore';
 
-export function FavoritesGrid() {
+interface FavoritesGridProps {
+  renderCard: (gallery: Gallery) => React.ReactNode;
+}
+
+export function FavoritesGrid({ renderCard }: FavoritesGridProps) {
   const favorites = useFavoritesStore((s) => s.favorites);
   const loading = useFavoritesStore((s) => s.loading);
   const error = useFavoritesStore((s) => s.error);
@@ -46,7 +50,7 @@ export function FavoritesGrid() {
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
       {favorites.map((gallery) => (
-        <GalleryCard key={gallery.id} gallery={gallery} />
+        <div key={gallery.id}>{renderCard(gallery)}</div>
       ))}
     </div>
   );

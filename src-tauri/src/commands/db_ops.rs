@@ -3,6 +3,17 @@ use rusqlite::{params, Connection};
 use crate::models::{Artist, Gallery, MediaEntry, MediaType, MediaGroup};
 use crate::services::scanner::{ArtistScanData, GalleryScanData, MediaFileScanData, UnorganizedFileScanData};
 
+// Gallery listing: one compile-time SQL string per allowed ORDER BY. ORDER BY
+// cannot be parameterized, so we avoid format!() entirely and only ever pass
+// &'static str to rusqlite::prepare.
+const SQL_GALLERIES_NAME_ASC:   &str = concat!("SELECT id, artist_id, name, path, page_count, total_size, cover_path, has_backup_zip, zip_status, last_read_page, last_read_at, favorited FROM galleries WHERE artist_id = ?1 AND is_deleted = FALSE ORDER BY ", "name COLLATE NOCASE ASC");
+const SQL_GALLERIES_NAME_DESC:  &str = concat!("SELECT id, artist_id, name, path, page_count, total_size, cover_path, has_backup_zip, zip_status, last_read_page, last_read_at, favorited FROM galleries WHERE artist_id = ?1 AND is_deleted = FALSE ORDER BY ", "name COLLATE NOCASE DESC");
+const SQL_GALLERIES_DATE_DESC:  &str = concat!("SELECT id, artist_id, name, path, page_count, total_size, cover_path, has_backup_zip, zip_status, last_read_page, last_read_at, favorited FROM galleries WHERE artist_id = ?1 AND is_deleted = FALSE ORDER BY ", "last_read_at DESC NULLS LAST, name COLLATE NOCASE");
+const SQL_GALLERIES_DATE_ASC:   &str = concat!("SELECT id, artist_id, name, path, page_count, total_size, cover_path, has_backup_zip, zip_status, last_read_page, last_read_at, favorited FROM galleries WHERE artist_id = ?1 AND is_deleted = FALSE ORDER BY ", "last_read_at ASC NULLS LAST, name COLLATE NOCASE");
+const SQL_GALLERIES_SIZE_ASC:   &str = concat!("SELECT id, artist_id, name, path, page_count, total_size, cover_path, has_backup_zip, zip_status, last_read_page, last_read_at, favorited FROM galleries WHERE artist_id = ?1 AND is_deleted = FALSE ORDER BY ", "total_size ASC, name COLLATE NOCASE");
+const SQL_GALLERIES_SIZE_DESC:  &str = concat!("SELECT id, artist_id, name, path, page_count, total_size, cover_path, has_backup_zip, zip_status, last_read_page, last_read_at, favorited FROM galleries WHERE artist_id = ?1 AND is_deleted = FALSE ORDER BY ", "total_size DESC, name COLLATE NOCASE");
+const SQL_GALLERIES_PAGES_DESC: &str = concat!("SELECT id, artist_id, name, path, page_count, total_size, cover_path, has_backup_zip, zip_status, last_read_page, last_read_at, favorited FROM galleries WHERE artist_id = ?1 AND is_deleted = FALSE ORDER BY ", "page_count DESC, name COLLATE NOCASE");
+
 /// Insert or update an artist in the database. Returns the artist ID.
 pub fn upsert_artist(conn: &Connection, root_id: i64, artist: &ArtistScanData) -> Result<i64, String> {
     let path_str = artist.path.to_string_lossy().to_string();
@@ -284,25 +295,23 @@ pub fn get_artists(conn: &Connection, root_id: i64) -> Result<Vec<Artist>, Strin
 }
 
 /// Get all galleries for an artist (excluding soft-deleted).
+///
+/// `sort` selects among a fixed set of compile-time SQL statements. ORDER BY
+/// clauses cannot be parameterized in SQLite, so each allowed ordering is a
+/// full compile-time `&'static str` query — no runtime string building, and
+/// no user input ever reaches the SQL text.
 pub fn get_galleries(conn: &Connection, artist_id: i64, sort: Option<&str>) -> Result<Vec<Gallery>, String> {
-    let order_clause = match sort {
-        Some("name_desc") => "name COLLATE NOCASE DESC",
-        Some("date_desc") => "last_read_at DESC NULLS LAST, name COLLATE NOCASE",
-        Some("date_asc") => "last_read_at ASC NULLS LAST, name COLLATE NOCASE",
-        Some("size_asc") => "total_size ASC, name COLLATE NOCASE",
-        Some("size_desc") => "total_size DESC, name COLLATE NOCASE",
-        Some("pages_desc") => "page_count DESC, name COLLATE NOCASE",
-        Some("last_read") => "last_read_at DESC NULLS LAST, name COLLATE NOCASE",
-        _ => "name COLLATE NOCASE ASC",
+    let sql: &'static str = match sort {
+        Some("name_desc")                    => SQL_GALLERIES_NAME_DESC,
+        Some("date_desc") | Some("last_read") => SQL_GALLERIES_DATE_DESC,
+        Some("date_asc")                     => SQL_GALLERIES_DATE_ASC,
+        Some("size_asc")                     => SQL_GALLERIES_SIZE_ASC,
+        Some("size_desc")                    => SQL_GALLERIES_SIZE_DESC,
+        Some("pages_desc")                   => SQL_GALLERIES_PAGES_DESC,
+        _                                    => SQL_GALLERIES_NAME_ASC,
     };
-    let sql = format!(
-        "SELECT id, artist_id, name, path, page_count, total_size, cover_path, \
-         has_backup_zip, zip_status, last_read_page, last_read_at, favorited \
-         FROM galleries WHERE artist_id = ?1 AND is_deleted = FALSE ORDER BY {}",
-        order_clause
-    );
     let mut stmt = conn
-        .prepare(&sql)
+        .prepare(sql)
         .map_err(|e| format!("Failed to prepare query: {}", e))?;
 
     let entries = stmt
