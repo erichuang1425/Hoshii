@@ -152,11 +152,11 @@ export function SettingsPanel() {
   const settings = useSettingsStore((s) => s.settings);
   const saving = useSettingsStore((s) => s.saving);
   const updateSetting = useSettingsStore((s) => s.updateSetting);
-  const { showToast } = useToast();
+  const toast = useToast();
 
   async function handleUpdate<K extends keyof AppSettings>(key: K, value: AppSettings[K]) {
     await updateSetting(key, value);
-    showToast({ type: 'success', message: t('settings.saved') });
+    toast.success(t('settings.saved'));
   }
 
   return (

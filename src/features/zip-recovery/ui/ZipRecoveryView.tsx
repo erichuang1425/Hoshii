@@ -38,7 +38,7 @@ export function ZipRecoveryView({ artistPath }: ZipRecoveryViewProps) {
   const restoreFromZip = useZipStore((s) => s.restoreFromZip);
   const getOrphanedCount = useZipStore((s) => s.getOrphanedCount);
   const getMissingCount = useZipStore((s) => s.getMissingCount);
-  const { showToast } = useToast();
+  const toast = useToast();
 
   const orphanedCount = getOrphanedCount();
   const missingCount = getMissingCount();
@@ -50,11 +50,11 @@ export function ZipRecoveryView({ artistPath }: ZipRecoveryViewProps) {
   async function handleRestore(zipPath: string, targetDir: string) {
     try {
       await restoreFromZip(zipPath, targetDir);
-      showToast({ type: 'success', message: t('zipRecovery.restored') });
+      toast.success(t('zipRecovery.restored'));
       // Re-verify after restore
       await verifyArtistPath(artistPath);
     } catch {
-      showToast({ type: 'error', message: t('zipRecovery.restoreError') });
+      toast.error(t('zipRecovery.restoreError'));
     }
   }
 
