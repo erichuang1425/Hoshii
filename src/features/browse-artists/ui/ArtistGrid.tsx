@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Artist } from '@/shared/types';
 import { t } from '@/shared/i18n';
@@ -69,6 +69,26 @@ function useGridColumns(
   minWidth: number,
   gap: number,
 ): number {
-  const width = containerRef.current?.clientWidth ?? 1200;
-  return Math.max(2, Math.floor((width + gap) / (minWidth + gap)));
+  const [width, setWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      setWidth(containerRef.current.clientWidth);
+    }
+  }, [containerRef]);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(entry.contentRect.width);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [containerRef]);
+
+  const effectiveWidth = width > 0 ? width : minWidth * 2 + gap;
+  return Math.max(2, Math.floor((effectiveWidth + gap) / (minWidth + gap)));
 }

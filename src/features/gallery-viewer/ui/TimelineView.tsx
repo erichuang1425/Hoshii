@@ -82,7 +82,7 @@ export function TimelineView({ timeline, currentPage, onSeek }: TimelineViewProp
 
   return (
     <div className="border-t border-[var(--border)] bg-[var(--bg-secondary)]">
-      <div className="flex items-center gap-0.5 overflow-x-auto px-3 py-1.5" style={{ scrollbarWidth: 'none' }}>
+      <div className="scrollbar-hidden flex items-center gap-0.5 overflow-x-auto px-3 py-1.5">
         <span className="mr-2 text-xs text-[var(--text-muted)] shrink-0">
           {t('timeline.label')}
         </span>

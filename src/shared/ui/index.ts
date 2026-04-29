@@ -12,3 +12,5 @@ export { DriveStatusDot } from './DriveStatusDot';
 export { MediaBadge } from './MediaBadge';
 export { ProgressBar } from './ProgressBar';
 export { ErrorBoundary } from './ErrorBoundary';
+export { GalleryCard } from './GalleryCard';
+export { TagModal } from './TagModal';
