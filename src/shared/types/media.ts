@@ -32,6 +32,8 @@ export interface MediaGroup {
 }
 
 export type ReadingMode = 'single' | 'vertical_scroll' | 'double_page' | 'thumbnail_grid';
+export type FitMode = 'fit_best' | 'fit_width' | 'fit_height' | 'original';
+export type ReadingDirection = 'ltr' | 'rtl' | 'vertical';
 
 export interface ReadingState {
   galleryId: number;
@@ -40,6 +42,26 @@ export interface ReadingState {
   currentGroup: string | null;
   readingMode: ReadingMode;
   zoomLevel: number;
+  fitMode: FitMode;
+  readingDirection: ReadingDirection;
+}
+
+export interface SmartGroup {
+  name: string;
+  galleryIds: number[];
+  galleryNames: string[];
+}
+
+export interface ChronologicalGroup {
+  date: string;
+  galleryId: number;
+  galleryName: string;
+}
+
+export interface TimelineEntry {
+  index: number;
+  filename: string;
+  date: string | null;
 }
 
 export interface VideoPlayerState {
@@ -104,4 +126,10 @@ export interface AppSettings {
   gallerySortOrder: GallerySortOrder;
   thumbnailCacheMaxMb: number;
   autoExportMetadata: boolean;
+  defaultReadingDirection: ReadingDirection;
+  defaultFitMode: FitMode;
+  autoScrollSpeed: number;
+  smartGroupingThreshold: number;
+  enableSmartGrouping: boolean;
+  enableChronologicalLinking: boolean;
 }

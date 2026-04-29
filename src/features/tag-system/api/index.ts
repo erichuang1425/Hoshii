@@ -1,1 +1,1 @@
-// tag-system/api - Tauri command wrappers
+export * from './tagApi';

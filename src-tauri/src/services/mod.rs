@@ -1,2 +1,8 @@
-// Business logic services called by command handlers.
-// Implemented in Task 1.2+ (scanner, volume_tracker, thumbnail, etc.)
+pub mod chrono_linking;
+pub mod media_detector;
+pub mod natural_sort;
+pub mod scanner;
+pub mod smart_grouping;
+pub mod thumbnail;
+pub mod video_processor;
+pub mod volume_tracker;

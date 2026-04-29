@@ -1,13 +1,13 @@
 import { type ReactNode } from 'react';
+import { ToastProvider } from '@/shared/ui';
 
 interface ProvidersProps {
   children: ReactNode;
 }
 
 /**
- * App-level providers wrapper. New providers are appended here as features
- * are implemented (e.g., ToastProvider in Task 1.3).
+ * App-level providers wrapper.
  */
 export function Providers({ children }: ProvidersProps) {
-  return <>{children}</>;
+  return <ToastProvider>{children}</ToastProvider>;
 }

@@ -1,1 +1,1 @@
-// file-manager/api - Tauri command wrappers
+export * from './fileManagerApi';

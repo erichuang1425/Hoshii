@@ -1,1 +1,1 @@
-// browse-artists/api - Tauri command wrappers
+export { getArtists, getGalleries } from './artistApi';

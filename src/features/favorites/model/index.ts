@@ -1,1 +1,1 @@
-// favorites/model - Zustand store and business logic
+export * from './useFavoritesStore';

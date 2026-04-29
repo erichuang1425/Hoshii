@@ -1,1 +1,7 @@
-// gallery-viewer/api - Tauri command wrappers
+export {
+  getGalleryMedia,
+  getMediaGroups,
+  generateThumbnail,
+  checkFfmpeg,
+  remuxVideo,
+} from './galleryApi';
