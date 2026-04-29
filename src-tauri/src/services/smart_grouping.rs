@@ -84,7 +84,8 @@ fn remove_pattern(s: &str, pattern: &str) -> String {
 
     // Just do simple keyword removal for known patterns
     let keywords = [
-        " vol ", " volume ", " ch ", " chapter ", " ep ", " episode ",
+        " vol. ", " vol.", " vol ", " volume ", " ch. ", " ch.", " ch ",
+        " chapter ", " ep. ", " ep.", " ep ", " episode ",
         " part ", " v ", " #",
     ];
     let mut result = lower.clone();
@@ -93,7 +94,18 @@ fn remove_pattern(s: &str, pattern: &str) -> String {
             // Check if rest is all digits/dots/spaces
             let rest = &result[pos + kw.len()..];
             let rest_trimmed = rest.trim();
-            if rest_trimmed.chars().all(|c| c.is_ascii_digit() || c == '.') {
+            if rest_trimmed.is_empty() || rest_trimmed.chars().all(|c| c.is_ascii_digit() || c == '.') {
+                result = result[..pos].to_string();
+            }
+        }
+    }
+    // Also handle keyword at end of string without trailing space (e.g., "comic ch.5")
+    let end_keywords = [" vol.", " ch.", " ep."];
+    for kw in &end_keywords {
+        if let Some(pos) = result.rfind(kw) {
+            let rest = &result[pos + kw.len()..];
+            let rest_trimmed = rest.trim();
+            if rest_trimmed.is_empty() || rest_trimmed.chars().all(|c| c.is_ascii_digit() || c == '.') {
                 result = result[..pos].to_string();
             }
         }

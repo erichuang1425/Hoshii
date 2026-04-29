@@ -102,8 +102,10 @@ fn try_ym_separated(name: &str, sep: char) -> Option<String> {
             && chars[i+4] == sep
             && is_digit_seq(&chars[i+5..i+7])
         {
-            // Ensure not followed by another sep+digit (would be YMD)
-            if i + 7 < n && chars[i+7] == sep {
+            // Ensure not followed by another sep+digit+digit (would be YMD)
+            if i + 7 < n && chars[i+7] == sep
+                && i + 9 < n && chars[i+8].is_ascii_digit() && chars[i+9].is_ascii_digit()
+            {
                 continue;
             }
             let y: u32 = chars_to_u32(&chars[i..i+4]);

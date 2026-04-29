@@ -1,6 +1,4 @@
 import { useRef, useCallback } from 'react';
-import clsx from 'clsx';
-
 interface VolumeSliderProps {
   volume: number;
   muted: boolean;

@@ -1,4 +1,3 @@
-use rusqlite::params;
 use tauri::State;
 
 use crate::db::AppDatabase;

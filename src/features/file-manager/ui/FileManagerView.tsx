@@ -22,7 +22,7 @@ export function FileManagerView({ artistPath, galleries }: FileManagerViewProps)
   const deselectAll = useFileManagerStore((s) => s.deselectAll);
   const moveSelectedToGallery = useFileManagerStore((s) => s.moveSelectedToGallery);
   const createAndMoveToGallery = useFileManagerStore((s) => s.createAndMoveToGallery);
-  const { showToast } = useToast();
+  const toast = useToast();
 
   const [moveModalOpen, setMoveModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -33,10 +33,10 @@ export function FileManagerView({ artistPath, galleries }: FileManagerViewProps)
     if (!selectedGalleryPath) return;
     try {
       await moveSelectedToGallery(selectedGalleryPath);
-      showToast({ type: 'success', message: t('fileManager.moved') });
+      toast.success(t('fileManager.moved'));
       setMoveModalOpen(false);
     } catch {
-      showToast({ type: 'error', message: t('fileManager.moveError') });
+      toast.error(t('fileManager.moveError'));
     }
   }
 
@@ -44,11 +44,11 @@ export function FileManagerView({ artistPath, galleries }: FileManagerViewProps)
     if (!newGalleryName.trim()) return;
     try {
       await createAndMoveToGallery(artistPath, newGalleryName.trim());
-      showToast({ type: 'success', message: t('fileManager.moved') });
+      toast.success(t('fileManager.moved'));
       setCreateModalOpen(false);
       setNewGalleryName('');
     } catch {
-      showToast({ type: 'error', message: t('fileManager.moveError') });
+      toast.error(t('fileManager.moveError'));
     }
   }
 
