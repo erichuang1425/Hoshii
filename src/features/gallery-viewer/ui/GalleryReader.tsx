@@ -7,6 +7,7 @@ import { t } from '@/shared/i18n';
 import { toAssetUrl } from '@/shared/lib/assetUrl';
 import { useGalleryReaderStore } from '../model/useGalleryReaderStore';
 import { useChronoStore } from '@/features/chrono-linking';
+import { useReadingProgressStore } from '@/features/reading-progress/model/useReadingProgressStore';
 import { PageView } from './PageView';
 import { ThumbnailStrip } from './ThumbnailStrip';
 import { SubheadingNav } from './SubheadingNav';
@@ -56,6 +57,35 @@ export function GalleryReader({ galleryId, artistId }: GalleryReaderProps) {
   const setAutoScrollSpeed = useGalleryReaderStore((s) => s.setAutoScrollSpeed);
 
   const { timeline, fetchTimeline, fetchGroups, getPrevGallery, getNextGallery } = useChronoStore();
+
+  const saveProgress = useReadingProgressStore((s) => s.saveProgress);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedPageRef = useRef<number>(-1);
+
+  // Debounced save: 3s after page change
+  useEffect(() => {
+    if (totalPages === 0 || currentPage === lastSavedPageRef.current) return;
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveProgress(galleryId, currentPage, totalPages);
+      lastSavedPageRef.current = currentPage;
+    }, 3000);
+
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [currentPage, totalPages, galleryId, saveProgress]);
+
+  // Save on unmount
+  useEffect(() => {
+    return () => {
+      const state = useGalleryReaderStore.getState();
+      if (state.totalPages > 0) {
+        saveProgress(galleryId, state.currentPage, state.totalPages);
+      }
+    };
+  }, [galleryId, saveProgress]);
 
   useEffect(() => {
     loadGallery(galleryId);

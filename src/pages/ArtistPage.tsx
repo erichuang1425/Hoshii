@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Spinner } from '@/shared/ui';
 import { t } from '@/shared/i18n';
@@ -6,6 +6,7 @@ import { GalleryCard } from '@/features/browse-artists/ui/GalleryCard';
 import { useBrowseArtistsStore } from '@/features/browse-artists/model/useBrowseArtistsStore';
 import { SmartGroupsPanel } from '@/features/smart-groups/ui/SmartGroupsPanel';
 import { useSettingsStore } from '@/features/settings/model/useSettingsStore';
+import { useTagStore } from '@/features/tag-system/model/useTagStore';
 import type { GallerySortOrder } from '@/shared/types';
 
 export function ArtistPage() {
@@ -20,6 +21,33 @@ export function ArtistPage() {
 
   const enableSmartGrouping = useSettingsStore((s) => s.settings.enableSmartGrouping);
   const numericArtistId = Number(artistId);
+
+  // Tag filtering
+  const [activeTagFilter, setActiveTagFilter] = useState<string[]>([]);
+  const activeTagFilterState = useTagStore((s) => s.activeTagFilter);
+  const filteredGalleries = useTagStore((s) => s.filteredGalleries);
+  const filterByTags = useTagStore((s) => s.filterByTags);
+  const clearTagFilter = useTagStore((s) => s.clearTagFilter);
+
+  // Collect unique tag names from galleries
+  const galleryTags = useTagStore((s) => s.galleryTags);
+  const allTagNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const gal of galleries) {
+      const tags = galleryTags[gal.id];
+      if (tags) {
+        for (const tag of tags) {
+          names.add(tag.name);
+        }
+      }
+    }
+    return Array.from(names).sort();
+  }, [galleries, galleryTags]);
+
+  // Determine displayed galleries (filtered or all)
+  const displayedGalleries = activeTagFilterState.length > 0
+    ? galleries.filter((g) => filteredGalleries.some((fg) => fg.id === g.id))
+    : galleries;
 
   useEffect(() => {
     if (!isNaN(numericArtistId)) {
@@ -49,8 +77,8 @@ export function ArtistPage() {
         <span className="text-[var(--text-primary)]">{t('browseArtists.galleriesOf')}</span>
       </div>
 
-      {/* Sort */}
-      <div className="mb-4 flex items-center gap-3">
+      {/* Sort + Tag Filter */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <select
           value={gallerySort}
           onChange={(e) => setGallerySort(e.target.value as GallerySortOrder)}
@@ -63,6 +91,38 @@ export function ArtistPage() {
           <option value="pages_desc">{t('browseArtists.sortPages')}</option>
           <option value="last_read">{t('browseArtists.sortLastRead')}</option>
         </select>
+        {allTagNames.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-[var(--text-muted)]">{t('tags.filterByTag')}:</span>
+            {allTagNames.map((tagName) => (
+              <button
+                key={tagName}
+                onClick={() => {
+                  const next = activeTagFilterState.includes(tagName)
+                    ? activeTagFilterState.filter((n) => n !== tagName)
+                    : [...activeTagFilterState, tagName];
+                  if (next.length === 0) clearTagFilter();
+                  else filterByTags(next);
+                }}
+                className={`rounded-full px-2 py-0.5 text-xs transition-colors ${
+                  activeTagFilterState.includes(tagName)
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-[var(--bg-active)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
+                }`}
+              >
+                {tagName}
+              </button>
+            ))}
+            {activeTagFilterState.length > 0 && (
+              <button
+                onClick={clearTagFilter}
+                className="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              >
+                {t('tags.clearFilter')}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {loading && (
@@ -73,16 +133,16 @@ export function ArtistPage() {
 
       {error && <p className="text-sm text-[var(--error)]">{error}</p>}
 
-      {!loading && galleries.length === 0 && (
+      {!loading && displayedGalleries.length === 0 && (
         <p className="py-8 text-center text-sm text-[var(--text-muted)]">
           {t('shared.noResults')}
         </p>
       )}
 
-      {!loading && galleries.length > 0 && (
+      {!loading && displayedGalleries.length > 0 && (
         <div className="flex gap-4">
           <div className="flex-1 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 content-start">
-            {galleries.map((gallery) => (
+            {displayedGalleries.map((gallery) => (
               <GalleryCard key={gallery.id} gallery={gallery} />
             ))}
           </div>

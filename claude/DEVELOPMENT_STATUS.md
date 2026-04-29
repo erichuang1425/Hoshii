@@ -1,6 +1,6 @@
 # Development Status
 
-**All 5 planned phases are complete. Phase 6 (Hardening) in progress.** 130 frontend tests + 117 Rust tests = 247 total tests passing.
+**All 5 planned phases are complete. Phase 6 (Hardening) nearly complete.** 158 frontend tests + 117 Rust tests = 275 total tests passing.
 
 ---
 
@@ -109,108 +109,64 @@ All frontend-referenced Rust commands have been implemented and registered in `m
 
 ---
 
-### 6.3: Add Error Boundary
+### 6.3: Add Error Boundary — ✅ COMPLETE
 
-**Priority: HIGH** — The app currently has no crash protection for rendering errors.
-
-- Create `src/shared/ui/ErrorBoundary.tsx` — class component wrapping `componentDidCatch`
-- Display a recovery UI with "Something went wrong" + retry button
-- Wrap the `RouterProvider` in `App.tsx` with `ErrorBoundary`
-- Add per-page error boundaries for feature isolation (one feature crash shouldn't kill the whole app)
-- Add a test for the error boundary
-
-**Files:**
-- `src/shared/ui/ErrorBoundary.tsx` (new)
-- `src/shared/ui/index.ts` (add export)
-- `src/app/App.tsx` (wrap router)
+- Created `src/shared/ui/ErrorBoundary.tsx` — class component with `componentDidCatch`, recovery UI with "Try Again" button
+- Wrapped `RouterProvider` in `App.tsx` with `ErrorBoundary`
+- Added 5 tests covering: normal render, error catch, custom fallback, onError callback, retry recovery
+- Exported from `src/shared/ui/index.ts`
 
 ---
 
-### 6.4: Implement Reading Progress Feature
+### 6.4: Implement Reading Progress Feature — ✅ COMPLETE
 
-**Priority: MEDIUM** — The feature slice exists as a stub with no implementation.
-
-The `features/reading-progress/` directory has empty barrel files. Implement:
-
-- `useReadingProgressStore.ts` — track `lastReadPage` per gallery, persist via `update_reading_progress` command
-- Auto-save progress when user navigates pages in `GalleryReader` (debounced, every 3s or on page change)
-- Auto-save on reader exit (unmount / Escape key)
-- Show progress bar on `GalleryCard` (already has `ProgressBar` UI component)
-- Show "Continue reading" on HomePage from `get_recent_galleries`
-
-**Files:**
-- `src/features/reading-progress/model/useReadingProgressStore.ts`
-- `src/features/reading-progress/api/readingProgressApi.ts`
-- `src/features/reading-progress/index.ts`
-- Integrate into `GalleryReader.tsx` (call save on page change / unmount)
-- Integrate into `GalleryCard.tsx` (show progress bar from gallery.lastReadPage)
-- Integrate into `HomePage.tsx` (recent galleries section)
+- Created `readingProgressApi.ts` with `updateReadingProgress()` and `getRecentGalleries()`
+- Created `useReadingProgressStore.ts` with `saveProgress()` and `fetchRecentGalleries()`
+- Integrated into `GalleryReader.tsx`: 3s debounced save on page change + save on unmount
+- Added "Continue Reading" section to `HomePage.tsx` with cover images and progress bars
+- Added 5 tests for the store
+- Added i18n keys `shared.continueReading` (en + zh-TW)
 
 ---
 
-### 6.5: Wire Up SmartGroupsPanel into ArtistPage
+### 6.5: Wire Up SmartGroupsPanel into ArtistPage — ✅ COMPLETE
 
-**Priority: MEDIUM** — The component exists but isn't connected to any page.
-
-- Import `SmartGroupsPanel` into `ArtistPage.tsx`
-- Show above the gallery grid when smart groups are detected for the current artist
-- Respect `enableSmartGrouping` setting from settings store
-- Add collapse/expand toggle
-
-**Files:** `src/pages/ArtistPage.tsx`
+SmartGroupsPanel was already imported in ArtistPage. Added:
+- Collapse/expand toggle with chevron icon and smooth rotation
+- Collapsed state hides group list, preserves panel header
 
 ---
 
-### 6.6: Integrate Tag System into Gallery Browsing
+### 6.6: Integrate Tag System into Gallery Browsing — ✅ COMPLETE
 
-**Priority: MEDIUM** — Tags can be added/removed but aren't used for filtering during browsing.
-
-- Add `TagFilter` to `ArtistPage.tsx` above gallery grid (filter galleries by tag)
-- Add tag pills to `GalleryCard.tsx` (show first 2-3 tags, overflow "+N more")
-- Add "Tag" option to gallery card context menu / hover actions
-- Connect `TagModal` to gallery cards for quick tagging
-
-**Files:**
-- `src/pages/ArtistPage.tsx` (add TagFilter)
-- `src/features/browse-artists/ui/GalleryCard.tsx` (show tags, add tag button)
+- Added tag pills to `GalleryCard.tsx` (first 3 tags shown, "+N" overflow)
+- Added hover tag button on gallery cards to open TagModal for quick tagging
+- Added tag filter bar in `ArtistPage.tsx` (toggle tag pills, clear filter button)
+- Tags auto-load per gallery card via `useTagStore.fetchGalleryTags()`
 
 ---
 
-### 6.7: Integrate File Watcher Service
+### 6.7: Integrate File Watcher Service — ✅ COMPLETE
 
-**Priority: MEDIUM** — The `notify` crate is imported but the file watcher service isn't connected.
-
-- Implement `services/file_watcher.rs` — watch active root folders for file changes
-- Debounce events (100ms) to batch rapid changes
-- On change: trigger incremental scan for affected gallery, update SQLite
-- Emit Tauri event `gallery_updated` to frontend
-- Frontend: listen for event in `useBrowseRootsStore` / `useBrowseArtistsStore` and refresh affected data
-- Start/stop watcher when root folders are added/removed
-- Handle drive disconnect (watcher errors) gracefully
-
-**Files:**
-- `src-tauri/src/services/file_watcher.rs` (implement)
-- `src-tauri/src/main.rs` (start watcher on app launch)
-- `src/features/browse-roots/model/useBrowseRootsStore.ts` (listen for events)
+- Created `src-tauri/src/services/file_watcher.rs` with debounced watch (100ms)
+- `FileWatcherService` manages per-root watchers with `watch_root()`, `unwatch_root()`, `unwatch_all()`
+- Registered in `main.rs`: auto-watches existing root folders on startup
+- Emits `gallery_updated` Tauri event with `rootPath` and `changedPaths`
+- Created `useGalleryUpdateListener` hook for frontend event listening
+- Exported from `src/shared/hooks/index.ts`
 
 ---
 
-### 6.8: Add Missing Test Coverage
+### 6.8: Add Missing Test Coverage — ✅ COMPLETE
 
-**Priority: MEDIUM** — Several features have no frontend tests.
+Added 28 new frontend tests (130 → 158):
 
-| Feature | Missing Tests | Priority |
-|---------|--------------|----------|
-| File Manager | Store tests (selection, move, create) | Medium |
-| Zip Recovery | Store tests (verify, restore) | Medium |
-| Error Boundary | Catches error, shows fallback | High |
-| GalleryReader | Keyboard navigation end-to-end | Medium |
-| Reading Progress | Save/load progress round-trip | Medium |
-| Sidebar | Section collapse, navigation | Low |
-| Header | Search input behavior | Low |
-| StatusBar | Count display formatting | Low |
-
-**Files:** Create `__tests__/` directories under each feature's `model/` and `ui/` as needed.
+| Suite | Tests Added |
+|-------|------------|
+| ErrorBoundary | 5 (render, catch, custom fallback, onError, retry) |
+| File Manager store | 9 (fetch, select, move, create, clear) |
+| Zip Recovery store | 9 (verify, restore, counts, clear) |
+| Reading Progress store | 5 (save, fetch, defaults, error handling) |
 
 ---
 
@@ -294,7 +250,7 @@ All Phase 6 tasks can be done independently. No file conflicts between tasks exc
 | Suite | Tests |
 |-------|-------|
 | Rust (all services) | 117 |
-| Shared UI | 49 |
+| Shared UI (incl. ErrorBoundary) | 54 |
 | Browse Roots store | 5 |
 | Browse Artists store | 6 |
 | Gallery Reader store | 12 |
@@ -307,8 +263,11 @@ All Phase 6 tasks can be done independently. No file conflicts between tasks exc
 | Tag store | 6 |
 | Smart Groups store | 4 |
 | Chrono store | 7 |
-| **Frontend total** | **130** |
-| **Grand total** | **247** |
+| File Manager store | 9 |
+| Zip Recovery store | 9 |
+| Reading Progress store | 5 |
+| **Frontend total** | **158** |
+| **Grand total** | **275** |
 
 **Note:** Rust tests require `libgtk-3-dev` and other Tauri system dependencies. Frontend tests run cleanly with `npx vitest run`. Run `npm install` before frontend tests.
 
@@ -316,7 +275,7 @@ All Phase 6 tasks can be done independently. No file conflicts between tasks exc
 
 ## i18n Coverage (en + zh-TW)
 
-Browse Roots (12), Browse Artists (14), Gallery Viewer (3), Video Player (6), Sidebar (11), Header (4), Status Bar (9), Settings (40+), Favorites (5), Tags (11), Search (7), File Manager (12), Zip Recovery (15), Shared (15), Reader Toolbar (13), Smart Groups (2), Timeline (3).
+Browse Roots (12), Browse Artists (14), Gallery Viewer (3), Video Player (6), Sidebar (11), Header (4), Status Bar (9), Settings (40+), Favorites (5), Tags (11), Search (7), File Manager (12), Zip Recovery (15), Shared (16), Reader Toolbar (13), Smart Groups (2), Timeline (3).
 
 ---
 
@@ -331,15 +290,17 @@ Browse Roots (12), Browse Artists (14), Gallery Viewer (3), Video Player (6), Si
 | ~~`thumbnail_grid` mode uses raw `entry.path`, not `toAssetUrl()`~~ | `GalleryReader.tsx` | ~~Bug~~ ✅ Fixed |
 | ~~`getFavoriteGalleries` filters all galleries client-side~~ | `favoritesApi.ts` | ~~PERF~~ ✅ Fixed |
 | ~~15 frontend `invoke()` calls reference unimplemented Rust commands~~ | Backend | ~~Critical~~ ✅ Fixed |
-| `SmartGroupsPanel` not wired into `ArtistPage`/`GalleryPage` sidebar | `SmartGroupsPanel.tsx` | Missing |
+| ~~`SmartGroupsPanel` not wired into `ArtistPage`~~ | `SmartGroupsPanel.tsx` | ~~Missing~~ ✅ Fixed (6.5) |
 | EXIF date extraction not implemented (filename-based only) | `chrono_linking.rs` | Feature gap |
-| No Error Boundary | `App.tsx` | Robustness |
-| `reading-progress` feature is an empty stub | `features/reading-progress/` | Missing |
-| File watcher (`notify`) imported but not integrated | `services/file_watcher.rs` | Missing |
+| ~~No Error Boundary~~ | `App.tsx` | ~~Robustness~~ ✅ Fixed (6.3) |
+| ~~`reading-progress` feature is an empty stub~~ | `features/reading-progress/` | ~~Missing~~ ✅ Fixed (6.4) |
+| ~~File watcher (`notify`) imported but not integrated~~ | `services/file_watcher.rs` | ~~Missing~~ ✅ Fixed (6.7) |
 | ~~Settings commands (`get_settings`/`update_settings`) not implemented~~ | Backend | ~~Missing~~ ✅ Fixed |
 | Metadata export/import commands not implemented | Backend | Missing |
 | No database migration system | `db/mod.rs` | Tech debt |
-| File Manager + Zip Recovery have no frontend tests | Frontend | Test gap |
+| ~~File Manager + Zip Recovery have no frontend tests~~ | Frontend | ~~Test gap~~ ✅ Fixed (6.8) |
+| Tag filtering in ArtistPage doesn't scope to current artist | `ArtistPage.tsx` | UX |
+| `useGalleryUpdateListener` hook created but not yet consumed by stores | Frontend | Integration gap |
 
 Find all in-code debt markers:
 ```bash
