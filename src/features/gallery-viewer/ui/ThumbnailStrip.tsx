@@ -50,8 +50,10 @@ export function ThumbnailStrip({ media, currentIndex, onSelect }: ThumbnailStrip
             <button
               key={item.key}
               onClick={() => onSelect(item.index)}
+              aria-label={`Page ${item.index + 1}`}
+              aria-current={isCurrent ? 'true' : undefined}
               className={clsx(
-                'absolute top-1/2 -translate-y-1/2 overflow-hidden rounded',
+                'focus-ring absolute top-1/2 -translate-y-1/2 overflow-hidden rounded',
                 'border-2 transition-all duration-[var(--duration-fast)]',
                 isCurrent ? 'border-[var(--accent)]' : 'border-transparent hover:border-[var(--border-hover)]',
               )}
