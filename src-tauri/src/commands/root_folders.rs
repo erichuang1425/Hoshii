@@ -61,7 +61,7 @@ pub async fn add_root_folder(
         .unwrap_or_else(|| path_str.clone());
 
     // Find or create volume for this path's mount point
-    // Use volume_id = 0 as a local-drive placeholder if no volume is detected
+    // Create a 'local' placeholder volume if no online volume is detected
     let volume_id: i64 = conn
         .query_row(
             "SELECT id FROM volumes WHERE is_online = TRUE ORDER BY id LIMIT 1",
@@ -80,7 +80,15 @@ pub async fn add_root_folder(
                 [],
                 |row| row.get(0),
             )
-            .unwrap_or(1)
+            .map_err(|e| {
+                log::error!("Failed to create or find local volume: {}", e);
+                e
+            })
+            .unwrap_or_else(|_| {
+                // Last resort: get any volume ID that exists
+                conn.query_row("SELECT id FROM volumes ORDER BY id LIMIT 1", [], |row| row.get(0))
+                    .unwrap_or(1)
+            })
         });
 
     conn.execute(

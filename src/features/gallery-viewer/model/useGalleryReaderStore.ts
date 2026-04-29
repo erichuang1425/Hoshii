@@ -27,8 +27,8 @@ function loadPrefs(galleryId: number): Partial<GalleryPrefs> {
 function savePrefs(galleryId: number, prefs: Partial<GalleryPrefs>) {
   try {
     localStorage.setItem(`${PREFS_KEY}:${galleryId}`, JSON.stringify(prefs));
-  } catch {
-    // ignore storage errors
+  } catch (err) {
+    logger.warn('Failed to save reader preferences to localStorage', { galleryId, error: String(err) });
   }
 }
 

@@ -91,12 +91,13 @@ pub async fn get_artists(
     db_ops::get_artists(&conn, root_id)
 }
 
-/// Get all galleries for an artist.
+/// Get all galleries for an artist, optionally sorted.
 #[tauri::command]
 pub async fn get_galleries(
     db: State<'_, AppDatabase>,
     artist_id: i64,
+    sort: Option<String>,
 ) -> Result<Vec<crate::models::Gallery>, String> {
     let conn = db.conn.lock().map_err(|e| format!("DB lock error: {}", e))?;
-    db_ops::get_galleries(&conn, artist_id)
+    db_ops::get_galleries(&conn, artist_id, sort.as_deref())
 }

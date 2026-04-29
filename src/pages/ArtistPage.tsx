@@ -56,13 +56,7 @@ export function ArtistPage() {
     ? galleries.filter((g) => filteredGalleries.some((fg) => fg.id === g.id))
     : galleries;
 
-  useEffect(() => {
-    if (!isNaN(numericArtistId)) {
-      fetchGalleries(numericArtistId);
-    }
-  }, [numericArtistId, fetchGalleries]);
-
-  // Re-fetch when sort changes
+  // Fetch galleries on mount and when sort or artist changes
   useEffect(() => {
     if (!isNaN(numericArtistId)) {
       fetchGalleries(numericArtistId);

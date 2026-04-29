@@ -25,6 +25,11 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
   const fetchGalleryTags = useTagStore((s) => s.fetchGalleryTags);
   const [tagModalOpen, setTagModalOpen] = useState(false);
 
+  // Sync local state when gallery prop changes
+  useEffect(() => {
+    setLocalFavorited(gallery.favorited);
+  }, [gallery.favorited]);
+
   useEffect(() => {
     if (!hasCachedTags) {
       fetchGalleryTags(gallery.id);
@@ -33,7 +38,8 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
 
   async function handleFavoriteClick(e: React.MouseEvent) {
     e.stopPropagation();
-    setLocalFavorited((prev) => !prev);
+    const newFavorited = !localFavorited;
+    setLocalFavorited(newFavorited);
     await toggleFavorite({ ...gallery, favorited: localFavorited });
   }
 

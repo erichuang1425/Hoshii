@@ -47,12 +47,16 @@ fn main() {
             let db_state = app.state::<db::AppDatabase>();
             let root_paths: Vec<String> = {
                 let conn = db_state.conn.lock().map_err(|e| e.to_string())?;
-                let mut stmt = conn
-                    .prepare("SELECT path FROM root_folders")
-                    .unwrap_or_else(|_| conn.prepare("SELECT '' WHERE 0").expect("fallback query"));
-                stmt.query_map([], |row| row.get(0))
-                    .map(|rows| rows.filter_map(|r| r.ok()).collect())
-                    .unwrap_or_default()
+                match conn.prepare("SELECT path FROM root_folders") {
+                    Ok(mut stmt) => stmt
+                        .query_map([], |row| row.get(0))
+                        .map(|rows| rows.filter_map(|r| r.ok()).collect())
+                        .unwrap_or_default(),
+                    Err(e) => {
+                        log::warn!("Could not query root folders on startup: {}", e);
+                        Vec::new()
+                    }
+                }
             };
 
             let watcher_state = app.state::<Mutex<services::file_watcher::FileWatcherService>>();
