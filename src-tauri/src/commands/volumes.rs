@@ -1,5 +1,5 @@
 use rusqlite::params;
-use tauri::State;
+use tauri::{AppHandle, Emitter, State};
 
 use crate::db::AppDatabase;
 use crate::models::Volume;
@@ -74,8 +74,12 @@ pub async fn get_volumes(db: State<'_, AppDatabase>) -> Result<Vec<Volume>, Stri
 
 /// Re-check which volumes are online and update the database.
 /// Does not add new volumes — only refreshes status of known ones.
+/// Emits `volume_status_changed` events for volumes whose online status changed.
 #[tauri::command]
-pub async fn refresh_volume_status(db: State<'_, AppDatabase>) -> Result<Vec<Volume>, String> {
+pub async fn refresh_volume_status(
+    db: State<'_, AppDatabase>,
+    app: AppHandle,
+) -> Result<Vec<Volume>, String> {
     log::info!("refresh_volume_status: checking volume connectivity");
 
     let detected = volume_tracker::detect_mounted_volumes()
@@ -88,6 +92,9 @@ pub async fn refresh_volume_status(db: State<'_, AppDatabase>) -> Result<Vec<Vol
         log::error!("Failed to acquire database lock: {}", e);
         format!("Database lock error: {}", e)
     })?;
+
+    // Snapshot current online status before updating
+    let old_volumes = get_all_volumes(&conn)?;
 
     // Mark all offline first
     conn.execute("UPDATE volumes SET is_online = FALSE", [])
@@ -119,7 +126,27 @@ pub async fn refresh_volume_status(db: State<'_, AppDatabase>) -> Result<Vec<Vol
 
     log::info!("refresh_volume_status: refreshed against {} mounted volumes", detected.len());
 
-    get_all_volumes(&conn)
+    let new_volumes = get_all_volumes(&conn)?;
+
+    // Emit events for volumes whose online status changed
+    for new_vol in &new_volumes {
+        let old_online = old_volumes
+            .iter()
+            .find(|v| v.id == new_vol.id)
+            .map(|v| v.is_online)
+            .unwrap_or(false);
+        if old_online != new_vol.is_online {
+            let _ = app.emit(
+                "volume_status_changed",
+                serde_json::json!({
+                    "volumeId": new_vol.id,
+                    "isOnline": new_vol.is_online,
+                }),
+            );
+        }
+    }
+
+    Ok(new_volumes)
 }
 
 /// Helper: fetch all volumes from the database.

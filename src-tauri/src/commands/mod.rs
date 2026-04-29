@@ -6,6 +6,7 @@ pub mod file_ops;
 pub mod gallery_ops;
 pub mod incremental_scan;
 pub mod media_probe;
+pub mod metadata_io;
 pub mod root_folders;
 pub mod scan_gallery;
 pub mod scan_roots;
