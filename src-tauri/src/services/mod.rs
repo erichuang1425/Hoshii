@@ -6,3 +6,4 @@ pub mod smart_grouping;
 pub mod thumbnail;
 pub mod video_processor;
 pub mod volume_tracker;
+pub mod file_watcher;
