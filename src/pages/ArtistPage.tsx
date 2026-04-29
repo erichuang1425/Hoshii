@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Spinner } from '@/shared/ui';
 import { t } from '@/shared/i18n';
@@ -23,11 +23,18 @@ export function ArtistPage() {
   const numericArtistId = Number(artistId);
 
   // Tag filtering
-  const [activeTagFilter, setActiveTagFilter] = useState<string[]>([]);
   const activeTagFilterState = useTagStore((s) => s.activeTagFilter);
   const filteredGalleries = useTagStore((s) => s.filteredGalleries);
   const filterByTags = useTagStore((s) => s.filterByTags);
   const clearTagFilter = useTagStore((s) => s.clearTagFilter);
+  const fetchBatchGalleryTags = useTagStore((s) => s.fetchBatchGalleryTags);
+
+  // Batch-load tags for all galleries when they change
+  useEffect(() => {
+    if (galleries.length > 0) {
+      fetchBatchGalleryTags(galleries.map((g) => g.id));
+    }
+  }, [galleries, fetchBatchGalleryTags]);
 
   // Collect unique tag names from galleries
   const galleryTags = useTagStore((s) => s.galleryTags);
@@ -139,7 +146,7 @@ export function ArtistPage() {
         </p>
       )}
 
-      {!loading && displayedGalleries.length > 0 && (
+      {!loading && (
         <div className="flex gap-4">
           <div className="flex-1 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 content-start">
             {displayedGalleries.map((gallery) => (
