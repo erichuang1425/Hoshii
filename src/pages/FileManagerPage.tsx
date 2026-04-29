@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { t } from '@/shared/i18n';
 import { Spinner } from '@/shared/ui';
 import { FileManagerView } from '@/features/file-manager/ui/FileManagerView';
@@ -18,6 +18,7 @@ export function FileManagerPage() {
   const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null);
   const [selectedRootId, setSelectedRootId] = useState<number | null>(null);
   const [artistsLoading, setArtistsLoading] = useState(false);
+  const artistRequestRef = useRef(0);
 
   useEffect(() => {
     fetchRoots();
@@ -40,11 +41,15 @@ export function FileManagerPage() {
   }
 
   async function handleArtistChange(artistId: number) {
+    const requestId = ++artistRequestRef.current;
     setSelectedArtistId(artistId);
+    setGalleries([]);
     fetchUnorganizedFiles(artistId);
     try {
       const galleryList = await invoke<Gallery[]>('get_galleries', { artistId });
-      setGalleries(galleryList);
+      if (artistRequestRef.current === requestId) {
+        setGalleries(galleryList);
+      }
     } catch (err) {
       logger.error('Failed to load galleries', { artistId, error: String(err) });
     }

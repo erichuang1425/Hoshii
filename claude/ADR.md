@@ -68,6 +68,13 @@ Quick reference for why each major decision was made. Useful when revisiting a c
 **Why:** If files are temporarily unavailable (drive disconnected, USB hiccup), hard-deleting DB records would lose all tags/favorites/progress. Soft delete preserves metadata. Records can be restored when files reappear.
 **Tradeoff:** Requires filtering `WHERE is_deleted = 0` in all gallery queries.
 
+## ADR-015: Mobile Access via Companion HTTP Server + Tailscale
+**Decision:** Add an optional HTTP API server to the Rust backend, accessed remotely via Tailscale tunnel, with a PWA mobile client
+**Context:** User has 2TB of artwork data on a desktop. Wants to browse from phone anywhere with minimal cost and optimal performance.
+**Why:** (1) Cloud storage for 2TB costs $20-100/month. (2) Local-first means the desktop is the source of truth. (3) Tailscale is free for personal use, zero-config VPN with WireGuard encryption. (4) PWA works on any phone without app store. (5) Thumbnails are tiny (~5KB each), full images streamed on demand — bandwidth-efficient even on mobile data.
+**Alternatives rejected:** (A) Cloud sync (Dropbox/GDrive) — too expensive for 2TB, sync conflicts. (B) NAS — additional hardware cost $300+. (C) Native mobile app — double the development effort, app store friction. (D) Cloudflare Tunnel — requires domain, more setup than Tailscale.
+**Tradeoff:** Desktop must be running for remote access. Mitigated by wake-on-LAN and scheduled uptime. See [MOBILE_STRATEGY.md](MOBILE_STRATEGY.md) for full architecture.
+
 ## ADR-014: Removed entities/ and widgets/ layers
 **Decision:** Flat structure: shared/ → features/ → layouts/ → pages/
 **Why:** Initial architecture had `entities/` (domain models with "minimal UI") and `widgets/` (composed sections). In practice: entity types are just interfaces (belong in shared/types), entity cards are just shared UI (belong in shared/ui), and widgets are just layout components (belong in layouts/). Extra layers added confusion about file placement without architectural benefit.

@@ -18,11 +18,12 @@ export function SearchPage() {
   useEffect(() => {
     const q = searchParams.get('q') ?? '';
     if (q) {
-      setQuery(q);
+      // Use search() directly which also sets the query in the store.
+      // Calling setQuery() here would trigger a redundant debounced search.
       search(q);
     }
-    // Focus input
     inputRef.current?.focus();
+    // Only run on mount — stable refs from Zustand
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {

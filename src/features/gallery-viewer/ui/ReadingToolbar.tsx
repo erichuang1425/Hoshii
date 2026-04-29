@@ -16,11 +16,11 @@ interface ReadingToolbarProps {
   visible: boolean;
 }
 
-const FIT_MODES: { value: FitMode; label: string }[] = [
-  { value: 'fit_best', label: 'Best' },
-  { value: 'fit_width', label: 'Width' },
-  { value: 'fit_height', label: 'Height' },
-  { value: 'original', label: '1:1' },
+const FIT_MODES: { value: FitMode; labelKey: string }[] = [
+  { value: 'fit_best', labelKey: 'reader.fitBest' },
+  { value: 'fit_width', labelKey: 'reader.fitWidth' },
+  { value: 'fit_height', labelKey: 'reader.fitHeight' },
+  { value: 'original', labelKey: 'reader.fitOriginal' },
 ];
 
 const READING_MODES: { value: ReadingMode; label: string; icon: string }[] = [
@@ -86,7 +86,7 @@ export function ReadingToolbar({
         {FIT_MODES.map((fm) => (
           <button
             key={fm.value}
-            title={fm.label}
+            title={t(fm.labelKey)}
             onClick={() => onFitModeChange(fm.value)}
             className={clsx(
               'px-2 py-0.5 text-xs rounded transition-colors',
@@ -95,7 +95,7 @@ export function ReadingToolbar({
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]',
             )}
           >
-            {fm.label}
+            {t(fm.labelKey)}
           </button>
         ))}
       </div>
