@@ -1,96 +1,91 @@
 # Hoshii (星)
 
-A local-first desktop gallery application for managing large artwork collections across multiple external hard drives. Built with Tauri v2 (Rust backend) + React 18 + TypeScript.
+Hoshii is a local-first desktop gallery manager designed for large personal media libraries distributed across external drives.
 
-## What It Does
+It is built with **Tauri v2**, **Rust**, **React 18**, and **TypeScript**.
 
-Browse, read, and organize galleries stored across external drives — with drive hot-plug awareness, mixed-media support (images, GIFs, AVIF, videos), natural sort ordering, and a fast keyboard-navigable reader.
+## Highlights
 
-**Key features:**
-- Grid-based browsing: root folders → artists → galleries
-- Multiple reading modes: single page, double page, vertical scroll, webtoon (long strip), thumbnail grid
-- Mixed media handling: static images, animated GIFs/WebP/AVIF, video (MP4/WebM, with ffmpeg remux for MKV/AVI)
-- Smart collection linking: fuzzy-match similar gallery names into groups
-- Chronological navigation: date-aware gallery and image browsing
-- External drive management: tracks drives by UUID, handles disconnect/reconnect gracefully
-- File management: organize loose files, detect/restore backup zips
-- Metadata portability: export tags/favorites/progress as JSON sidecar files
+- **Drive-aware library management** with reconnect-safe root tracking.
+- **High-performance browsing** for deep folder trees and large galleries.
+- **Multiple reader modes** (single, double, vertical, webtoon, thumbnails).
+- **Mixed-media support** for images and videos, including optional ffmpeg workflows.
+- **Portable metadata** via JSON sidecar export/import.
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Desktop Shell | Tauri v2 |
-| Backend | Rust (filesystem scanning, SQLite, thumbnails, video processing) |
-| Frontend | React 18 + TypeScript |
+| --- | --- |
+| Desktop | Tauri v2 |
+| Frontend | React 18 + TypeScript + Vite |
+| Backend | Rust |
 | State | Zustand |
-| Styling | Tailwind CSS v4 + CSS variables |
-| Database | SQLite (WAL mode) via `rusqlite` |
-| Virtual Scrolling | @tanstack/react-virtual |
-| Bundler | Vite |
-| Video (optional) | ffmpeg (user-installed) |
+| Styling | Tailwind CSS v4 |
+| Data | SQLite (`rusqlite`, WAL mode) |
 
-## Prerequisites
+## Getting Started
 
-1. **Node.js** >= 18
-2. **Rust** — `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
-3. **System WebView:**
-   - Windows 10+: pre-installed (WebView2)
-   - macOS: pre-installed (WebKit)
-   - Linux: `sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf`
-4. **ffmpeg** (optional, for video remux + thumbnails):
-   - Windows: `winget install ffmpeg`
-   - macOS: `brew install ffmpeg`
-   - Linux: `sudo apt install ffmpeg`
+### Prerequisites
 
-## Quick Start
+- **Node.js** 18+
+- **Rust toolchain** (stable)
+- Platform dependencies for Tauri (WebView / GTK packages depending on OS)
+- Optional: **ffmpeg** for video remuxing and richer thumbnail support
+
+### Install
 
 ```bash
-git clone <repo-url> && cd hoshii
+git clone <your-repo-url>
+cd Hoshii
 npm install
+```
 
-# Run tests
-cargo test --manifest-path src-tauri/Cargo.toml
-npm run test
+### Run in development
 
-# Development
+```bash
 npm run tauri dev
 ```
 
-## Commands
+### Build
 
-| Command | Purpose |
-|---------|---------|
-| `npm run tauri dev` | Start dev mode with hot reload |
-| `npm run tauri build` | Production build (creates installer) |
-| `npm run dev` | Frontend-only dev server |
-| `npm run test` | Run frontend tests (Vitest) |
-| `cargo test --manifest-path src-tauri/Cargo.toml` | Run Rust tests |
-| `cargo clippy --manifest-path src-tauri/Cargo.toml` | Rust linting |
-
-## Architecture
-
-Feature-Sliced Vertical Architecture — each feature is a self-contained folder with its own UI, state, and API layer. See [claude/ARCHITECTURE.md](claude/ARCHITECTURE.md) for full details.
-
+```bash
+npm run build
+npm run tauri build
 ```
+
+## Common Commands
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Frontend development server |
+| `npm run build` | Type-check + production frontend build |
+| `npm run test` | Run frontend tests (Vitest) |
+| `npm run tauri dev` | Run desktop app in development mode |
+| `npm run tauri build` | Build production desktop binaries |
+
+## Project Structure
+
+```text
 src/
-├── app/           # Routes, providers, global CSS
-├── shared/        # Types, hooks, UI primitives, utils, i18n
-├── features/      # Independent feature slices (browse-roots, gallery-viewer, etc.)
-├── layouts/       # MainLayout, Sidebar, Header, StatusBar
-└── pages/         # Route-level components
+  app/         Application bootstrap and global setup
+  features/    Feature modules (UI/state/api grouped by domain)
+  layouts/     Layout system and shell variants
+  shared/      Reusable utilities, hooks, primitives, and types
+  pages/       Route-level pages
 
 src-tauri/src/
-├── commands/      # Tauri invoke handlers
-├── services/      # Business logic (scanner, thumbnails, video, etc.)
-├── models/        # Rust data structs
-└── db/            # SQLite schema + migrations
+  commands/    Tauri command handlers
+  services/    Core backend services
+  db/          SQLite schema and migration logic
+  models/      Rust domain models
 ```
 
 ## Documentation
 
-Detailed docs live in [`claude/`](claude/) — see [CLAUDE.md](CLAUDE.md) for the full documentation map.
+- [Project Architecture](docs/ARCHITECTURE.md)
+- [Contributing Guide](docs/CONTRIBUTING.md)
+- [Security Policy](docs/SECURITY.md)
 
 ## License
 
-Private project.
+This repository is currently private and not licensed for redistribution.
