@@ -21,6 +21,8 @@ interface FileManagerState {
   clearError: () => void;
 }
 
+let fetchRequestCounter = 0;
+
 export const useFileManagerStore = create<FileManagerState>((set, get) => ({
   unorganizedFiles: [],
   selectedFiles: new Set(),
@@ -30,14 +32,20 @@ export const useFileManagerStore = create<FileManagerState>((set, get) => ({
   currentArtistId: null,
 
   fetchUnorganizedFiles: async (artistId) => {
+    const requestId = ++fetchRequestCounter;
     set({ loading: true, error: null, currentArtistId: artistId, selectedFiles: new Set() });
     try {
       const files = await api.getUnorganizedFiles(artistId);
-      set({ unorganizedFiles: files, loading: false });
+      // Only apply result if this is still the latest request
+      if (fetchRequestCounter === requestId) {
+        set({ unorganizedFiles: files, loading: false });
+      }
     } catch (err) {
-      const message = String(err);
-      logger.error('Failed to fetch unorganized files', { artistId, error: message });
-      set({ error: message, loading: false });
+      if (fetchRequestCounter === requestId) {
+        const message = String(err);
+        logger.error('Failed to fetch unorganized files', { artistId, error: message });
+        set({ error: message, loading: false });
+      }
     }
   },
 

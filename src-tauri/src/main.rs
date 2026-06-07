@@ -125,5 +125,9 @@ fn main() {
             commands::metadata_io::import_metadata,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running Hoshii");
+        .unwrap_or_else(|e| {
+            log::error!("Fatal: Failed to run Hoshii application: {}", e);
+            eprintln!("Fatal: Failed to run Hoshii application: {}", e);
+            std::process::exit(1);
+        });
 }
