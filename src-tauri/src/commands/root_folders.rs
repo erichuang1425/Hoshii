@@ -80,16 +80,22 @@ pub async fn add_root_folder(
                 [],
                 |row| row.get(0),
             )
-            .map_err(|e| {
+            .unwrap_or_else(|e| {
                 log::error!("Failed to create or find local volume: {}", e);
-                e
-            })
-            .unwrap_or_else(|_| {
                 // Last resort: get any volume ID that exists
                 conn.query_row("SELECT id FROM volumes ORDER BY id LIMIT 1", [], |row| row.get(0))
-                    .unwrap_or(1)
+                    .unwrap_or_else(|e2| {
+                        log::error!("No volumes exist in database: {}", e2);
+                        // Return -1 as a sentinel; the subsequent INSERT will fail with
+                        // a clear FK error rather than corrupting data
+                        -1
+                    })
             })
         });
+
+    if volume_id < 0 {
+        return Err("No volumes found in database. Please detect volumes first.".to_string());
+    }
 
     conn.execute(
         "INSERT INTO root_folders (volume_id, path, relative_path, label) \

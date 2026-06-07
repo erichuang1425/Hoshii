@@ -123,7 +123,23 @@ pub async fn restore_from_zip(
             return Err(format!("Zip contains path traversal: {}", entry_name));
         }
 
+        // Security: reject absolute paths
+        if entry_name.starts_with('/') || entry_name.starts_with('\\') {
+            return Err(format!("Zip contains absolute path: {}", entry_name));
+        }
+
         let out_path = target.join(&entry_name);
+
+        // Security: verify resolved path stays within target directory
+        let canonical_target = target.canonicalize()
+            .map_err(|e| format!("Failed to canonicalize target: {}", e))?;
+        if out_path.is_dir() || out_path.is_file() {
+            let canonical_out = out_path.canonicalize()
+                .map_err(|e| format!("Failed to canonicalize output path: {}", e))?;
+            if !canonical_out.starts_with(&canonical_target) {
+                return Err(format!("Zip entry escapes target directory: {}", entry_name));
+            }
+        }
 
         if entry.is_dir() {
             std::fs::create_dir_all(&out_path)

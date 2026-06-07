@@ -29,15 +29,14 @@ export function SearchPage() {
 
   const handleCloseTagModal = useCallback(() => setTagModalGalleryId(null), []);
 
-  // Sync URL param → store on mount
+  // Sync URL param → store on mount and when URL changes (e.g. browser back/forward)
+  const urlQuery = searchParams.get('q') ?? '';
   useEffect(() => {
-    const q = searchParams.get('q') ?? '';
-    if (q) {
-      search(q);
+    if (urlQuery) {
+      search(urlQuery);
     }
     inputRef.current?.focus();
-    // Only run on mount — stable refs from Zustand
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [urlQuery, search]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const q = e.target.value;
