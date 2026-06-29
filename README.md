@@ -1,96 +1,123 @@
-# Hoshii (星)
+# Hoshii
 
-A local-first desktop gallery application for managing large artwork collections across multiple external hard drives. Built with Tauri v2 (Rust backend) + React 18 + TypeScript.
+**A local-first desktop gallery for large image and media collections spread across external drives.**
 
-## What It Does
+Hoshii is built for people who keep artwork, references, comics, scans, or mixed media archives on real folders instead of cloud libraries. Add your root folders, scan once, and browse fast with drive-aware status, natural sorting, thumbnails, favorites, tags, search, and multiple reading modes.
 
-Browse, read, and organize galleries stored across external drives — with drive hot-plug awareness, mixed-media support (images, GIFs, AVIF, videos), natural sort ordering, and a fast keyboard-navigable reader.
+> Status: desktop feature set is implemented. The project is ready for polish, packaging, and broader real-world testing.
 
-**Key features:**
-- Grid-based browsing: root folders → artists → galleries
-- Multiple reading modes: single page, double page, vertical scroll, webtoon (long strip), thumbnail grid
-- Mixed media handling: static images, animated GIFs/WebP/AVIF, video (MP4/WebM, with ffmpeg remux for MKV/AVI)
-- Smart collection linking: fuzzy-match similar gallery names into groups
-- Chronological navigation: date-aware gallery and image browsing
-- External drive management: tracks drives by UUID, handles disconnect/reconnect gracefully
-- File management: organize loose files, detect/restore backup zips
-- Metadata portability: export tags/favorites/progress as JSON sidecar files
+## Highlights
+
+- **External-drive aware library**: tracks volumes by UUID so collections survive disconnects, reconnects, and changed mount paths.
+- **Fast gallery browsing**: root folders, artists, galleries, thumbnails, favorites, tags, and global search.
+- **Reader built for mixed collections**: single page, double page, vertical scroll, long strip, webtoon, and thumbnail grid modes.
+- **Mixed media support**: images, animated formats, AVIF, MP4/WebM playback, and optional ffmpeg-powered video remuxing/thumbnails.
+- **Smart organization tools**: fuzzy smart groups, chronological linking, loose-file organization, and backup zip recovery.
+- **Portable metadata**: tags, favorites, and reading progress can be exported as JSON sidecars.
+- **Local-first architecture**: Rust filesystem/SQLite backend, React UI, no hosted service required.
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Desktop Shell | Tauri v2 |
-| Backend | Rust (filesystem scanning, SQLite, thumbnails, video processing) |
-| Frontend | React 18 + TypeScript |
+| --- | --- |
+| Desktop shell | Tauri v2 |
+| Backend | Rust, SQLite, `rusqlite` |
+| Frontend | React 18, TypeScript, React Router |
 | State | Zustand |
-| Styling | Tailwind CSS v4 + CSS variables |
-| Database | SQLite (WAL mode) via `rusqlite` |
-| Virtual Scrolling | @tanstack/react-virtual |
-| Bundler | Vite |
-| Video (optional) | ffmpeg (user-installed) |
-
-## Prerequisites
-
-1. **Node.js** >= 18
-2. **Rust** — `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
-3. **System WebView:**
-   - Windows 10+: pre-installed (WebView2)
-   - macOS: pre-installed (WebKit)
-   - Linux: `sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf`
-4. **ffmpeg** (optional, for video remux + thumbnails):
-   - Windows: `winget install ffmpeg`
-   - macOS: `brew install ffmpeg`
-   - Linux: `sudo apt install ffmpeg`
+| Styling | Tailwind CSS v4, CSS variables |
+| Virtualization | `@tanstack/react-virtual` |
+| Build | Vite |
+| Tests | Vitest, Testing Library, Rust tests |
+| Optional media tooling | ffmpeg |
 
 ## Quick Start
 
 ```bash
-git clone <repo-url> && cd hoshii
+git clone https://github.com/erichuang1425/Hoshii.git
+cd Hoshii
 npm install
-
-# Run tests
-cargo test --manifest-path src-tauri/Cargo.toml
-npm run test
-
-# Development
 npm run tauri dev
 ```
 
-## Commands
+### Prerequisites
+
+- Node.js 18 or newer
+- Rust stable toolchain
+- Platform WebView dependencies required by Tauri
+- ffmpeg, optional, for video remuxing and video thumbnails
+
+Linux development may require:
+
+```bash
+sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+```
+
+## Common Commands
 
 | Command | Purpose |
-|---------|---------|
-| `npm run tauri dev` | Start dev mode with hot reload |
-| `npm run tauri build` | Production build (creates installer) |
-| `npm run dev` | Frontend-only dev server |
-| `npm run test` | Run frontend tests (Vitest) |
+| --- | --- |
+| `npm run tauri dev` | Run the desktop app in development mode |
+| `npm run tauri build` | Build production desktop bundles |
+| `npm run dev` | Run the frontend-only Vite server |
+| `npm run build` | Type-check and build frontend assets |
+| `npm run test` | Run frontend tests |
 | `cargo test --manifest-path src-tauri/Cargo.toml` | Run Rust tests |
-| `cargo clippy --manifest-path src-tauri/Cargo.toml` | Rust linting |
+| `cargo clippy --manifest-path src-tauri/Cargo.toml` | Run Rust lint checks |
 
-## Architecture
+## Project Structure
 
-Feature-Sliced Vertical Architecture — each feature is a self-contained folder with its own UI, state, and API layer. See [claude/ARCHITECTURE.md](claude/ARCHITECTURE.md) for full details.
-
-```
+```text
 src/
-├── app/           # Routes, providers, global CSS
-├── shared/        # Types, hooks, UI primitives, utils, i18n
-├── features/      # Independent feature slices (browse-roots, gallery-viewer, etc.)
-├── layouts/       # MainLayout, Sidebar, Header, StatusBar
-└── pages/         # Route-level components
+  app/                  App setup, routes, providers, global styles
+  features/             Vertical feature slices
+  layouts/              Main shell, sidebar, header, status bar
+  pages/                Route-level screens
+  shared/               Shared UI, hooks, API wrapper, types, utilities
 
-src-tauri/src/
-├── commands/      # Tauri invoke handlers
-├── services/      # Business logic (scanner, thumbnails, video, etc.)
-├── models/        # Rust data structs
-└── db/            # SQLite schema + migrations
+src-tauri/
+  src/commands/         Tauri command handlers
+  src/db/               SQLite schema and migrations
+  src/models/           Rust data models
+  src/services/         Scanner, thumbnails, sorting, volume tracking, media tools
+
+docs/                   Architecture notes, conventions, security notes, references
 ```
 
-## Documentation
+## Development Notes
 
-Detailed docs live in [`claude/`](claude/) — see [CLAUDE.md](CLAUDE.md) for the full documentation map.
+Hoshii uses a feature-sliced frontend: each feature owns its `ui`, `model`, and `api` files, while cross-cutting pieces live in `src/shared`. The Rust backend exposes Tauri commands backed by services and a SQLite database in WAL mode.
+
+Before making structural changes, start with [CONTRIBUTING.md](CONTRIBUTING.md) and the deeper references in [docs/](docs/), especially [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/CONVENTIONS.md](docs/CONVENTIONS.md), and [docs/SECURITY.md](docs/SECURITY.md).
+
+## Testing
+
+```bash
+npm run test
+cargo test --manifest-path src-tauri/Cargo.toml
+cargo clippy --manifest-path src-tauri/Cargo.toml
+```
+
+The current test suite covers frontend stores/components, media grouping, shared UI primitives, Rust services, and database behavior. End-to-end Tauri coverage is still on the roadmap.
+
+## Deployment
+
+Desktop bundles are produced through Tauri:
+
+```bash
+npm run tauri build
+```
+
+The build uses the Vite frontend output in `dist/` and Tauri configuration from `src-tauri/tauri.conf.json`.
+
+## Roadmap
+
+- Add connection pooling for heavier scan and UI workloads.
+- Extract EXIF dates for stronger chronological linking.
+- Add end-to-end tests around Tauri IPC and reader workflows.
+- Complete a second accessibility audit pass.
+- Profile very large libraries and tune indexes/virtualization settings.
+- Explore a companion mobile or remote-access flow without compromising the local-first model.
 
 ## License
 
-Private project.
+MIT

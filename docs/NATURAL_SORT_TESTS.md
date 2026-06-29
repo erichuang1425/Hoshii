@@ -1,7 +1,7 @@
 ﻿
 # Natural Sort Test Fixtures
 
-Use these as the definitive test cases for `services/natural_sort.rs` and `model/mediaGrouping.ts`. Every Claude instance working on sorting or grouping must validate against these. (Just to clarify the gallery images can be sorted in reverse order if the user decides to switch browsing order.)
+Use these as the definitive test cases for `services/natural_sort.rs` and `model/mediaGrouping.ts`. Every contributor working on sorting or grouping should validate against these. Gallery images can be sorted in reverse order when the user switches browsing order.
 
 ## Sort Order Tests
 
@@ -137,4 +137,4 @@ Groups: None
 |All files ungrouped (1.jpg, 2.jpg, 3.jpg) |No                  |—                                           |
 |All files same group (lucy1, lucy2, lucy3)|No                  |—                                           |
 |2+ distinct groups                        |Yes                 |`[All 24] [lucy ●12] [eva ●8] [mia ●4]`     |
-|Mix of grouped + ungrouped                |Yes                 |`[All 10] [Ungrouped ●4] [lucy ●3] [eva ●3]`|Written with [StackEdit](https://stackedit.io/).
+|Mix of grouped + ungrouped                |Yes                 |`[All 10] [Ungrouped ●4] [lucy ●3] [eva ●3]`|

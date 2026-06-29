@@ -15,7 +15,7 @@ Quick reference for why each major decision was made. Useful when revisiting a c
 
 ## ADR-003: Feature-Sliced Vertical Architecture
 **Decision:** Features as self-contained folders, no layered architecture
-**Why:** Primary constraint is parallel Claude instance development. Layered architecture (services/controllers/repos) means every feature touches shared files → merge conflicts. VSA isolates each feature. Only append-only files (routes, main.rs) are shared merge points.
+**Why:** Primary constraint is parallel feature development. Layered architecture (services/controllers/repos) means every feature touches shared files -> merge conflicts. VSA isolates each feature. Only append-only files (routes, main.rs) are shared merge points.
 **Tradeoff:** Some code duplication between slices. Mitigated by shared types + shared UI components.
 
 ## ADR-004: Zustand over Redux/Pinia
